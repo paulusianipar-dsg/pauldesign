@@ -61,21 +61,6 @@
         <a href="contact.html" class="btn btn-primary btn-sm">
           <i class="fa-solid fa-paper-plane"></i> Hubungi Saya
         </a>
-        <!-- Auth Buttons (shown when logged out) -->
-        <div class="auth-nav-group" id="authNavGroup">
-          <a href="auth.html" class="btn btn-primary btn-sm" id="navLoginBtn">
-            <i class="fa-solid fa-right-to-bracket"></i> Login
-          </a>
-        </div>
-        <!-- User Info (shown when logged in) -->
-        <div class="auth-user-group" id="authUserGroup" style="display: none;">
-          <span class="auth-user-name" id="navUserName">
-            <i class="fa-solid fa-user-circle"></i> <span id="navUserNameText">User</span>
-          </span>
-          <button class="btn btn-outline btn-sm" id="navLogoutBtn">
-            <i class="fa-solid fa-right-from-bracket"></i> Keluar
-          </button>
-        </div>
       </div>
 
       <!-- Mobile Hamburger Toggle -->
@@ -100,19 +85,6 @@
       <a href="contact.html" class="btn btn-primary">
         <i class="fa-solid fa-paper-plane"></i> Hubungi Saya
       </a>
-      <div class="auth-nav-group" id="authNavGroupMobile">
-        <a href="auth.html" class="btn btn-primary">
-          <i class="fa-solid fa-right-to-bracket"></i> Login
-        </a>
-      </div>
-      <div class="auth-user-group" id="authUserGroupMobile" style="display: none;">
-        <span class="auth-user-name">
-          <i class="fa-solid fa-user-circle"></i> <span id="navUserNameTextMobile">User</span>
-        </span>
-        <button class="btn btn-outline" id="navLogoutBtnMobile">
-          <i class="fa-solid fa-right-from-bracket"></i> Keluar
-        </button>
-      </div>
     </div>
   </div>
 
@@ -369,9 +341,8 @@
     <span id="toastMessage">Pesan berhasil dikirim!</span>
   </div>
 
-  <!-- Auth Module -->
-  <script type="module" src="supabase.js"></script>
-  <script type="module" src="auth.js"></script>
+  <!-- API client (data lokal) -->
+  <script type="module" src="api-client.js"></script>
   <!-- Main JavaScript File -->
   <script type="module" src="notification.js"></script>
   <script type="module" src="script.js"></script>

@@ -1,0 +1,123 @@
+{
+  "admin": {
+    "passwordHash": "scrypt$16384$8$1$t5FQ9ht6OXOH35i4xQJXMg==$ia1Ac/eqJ+L7jRjXrLll1Cnc9DIaEyOrvTMhSHVdVvOn4O4MIFJrgK1jR6wN6grzu3k/SGpUcUWPMEj5cEXMsA==",
+    "sessionSecret": null
+  },
+  "projects": [
+    {
+      "id": "37ba2885-cd38-4c8d-85f6-f1523042e031",
+      "title": "SaaS Analytics & Cloud Dashboard",
+      "category": "Web Application",
+      "description": "Platform analytics SaaS tingkat tinggi yang mampu mengolah jutaan baris data setiap detik. Dilengkapi dengan visualisasi grafik interaktif, statistik pendapatan real-time, ekspor laporan otomatis, serta otentikasi peran pengguna ganda.",
+      "challenges": "Mengoptimalkan performa rendering chart dan kueri database besar tanpa menghambat antarmuka pengguna.",
+      "solutions": "Menggunakan WebSockets untuk data streaming, Redis untuk caching data, dan arsitektur komponen React yang modular.",
+      "image": "./assets/images/project1.png",
+      "tech_stack": [
+        "Laravel 10",
+        "React.js",
+        "Tailwind CSS",
+        "Chart.js",
+        "Redis",
+        "MySQL"
+      ],
+      "client": "CloudPulse Enterprise",
+      "period": "3 Bulan (2025)",
+      "created_at": "2025-12-31T00:00:00.000Z"
+    },
+    {
+      "id": "4522f751-9d58-4a96-a535-6537bb8c3a99",
+      "title": "CryptoPay FinTech Companion App",
+      "category": "Mobile App",
+      "description": "Aplikasi dompet digital serbaguna untuk bertransaksi dan memantau portofolio aset kripto secara cepat dan aman. Memiliki fitur keamanan biometrik (FaceID/Fingerprint), notifikasi perubahan harga, dan swap token instan.",
+      "challenges": "Menjamin keamanan transaksi Web3 dan sinkronisasi real-time harga aset dari berbagai pertukaran crypto.",
+      "solutions": "Implementasi protokol enkripsi bertingkat tinggi dan API WebSocket berkecepatan tinggi.",
+      "image": "./assets/images/project2.png",
+      "tech_stack": [
+        "React Native",
+        "TypeScript",
+        "Node.js",
+        "Web3.js",
+        "Firebase",
+        "Redux Toolkit"
+      ],
+      "client": "CryptoPay Global",
+      "period": "4 Bulan (2025)",
+      "created_at": "2025-12-30T00:00:00.000Z"
+    },
+    {
+      "id": "7a8de534-5338-4c98-8749-34c70938d860",
+      "title": "Luxe Commerce Luxury Storefront",
+      "category": "UI/UX Design",
+      "description": "Desain sistem antarmuka antarmuka eksklusif untuk toko ritel mewah. Mengusung konsep visual dark glassmorphism modern dengan micro-animations yang mulus untuk meningkatkan angka konversi belanja.",
+      "challenges": "Menciptakan kesan mewah yang eksklusif tanpa mengorbankan kecepatan navigasi dan kemudahan akses di layar seluler.",
+      "solutions": "Merancang Design System Figma yang komprehensif lengkap dengan aturan tipografi, komponen reusable, dan skenario pengujian pengguna.",
+      "image": "./assets/images/project3.png",
+      "tech_stack": [
+        "Figma",
+        "UI/UX Research",
+        "Interactive Prototype",
+        "Design System"
+      ],
+      "client": "Luxe Group Indonesia",
+      "period": "2 Bulan (2024)",
+      "created_at": "2025-12-29T00:00:00.000Z"
+    },
+    {
+      "id": "1cc8aeda-bb74-4b6b-a985-b581b781c9b7",
+      "title": "AI Content Generator Suite",
+      "category": "Web Application",
+      "description": "Platform pembuatan konten otomatis yang memanfaatkan model bahasa LLM OpenAI. Pengguna dapat menghasilkan artikel blog, postingan sosial media, dan desain gambar dalam hitungan detik.",
+      "challenges": "Menangani batas kecepatan API (rate-limiting) dan pemrosesan latar belakang untuk generasi konten panjang.",
+      "solutions": "Sistem antrean tugas (Queue system) berbasis BullMQ dan pemicu respons berbasis Server-Sent Events (SSE).",
+      "image": "./assets/images/project1.png",
+      "tech_stack": [
+        "Next.js 14",
+        "OpenAI API",
+        "PostgreSQL",
+        "Prisma ORM",
+        "Tailwind CSS"
+      ],
+      "client": "MediaCraft AI",
+      "period": "2.5 Bulan (2025)",
+      "created_at": "2025-12-28T00:00:00.000Z"
+    },
+    {
+      "id": "30dddd2f-d721-4cbd-b30d-2b72d436c77e",
+      "title": "HealthPulse Smart Fitness Tracker",
+      "category": "Mobile App",
+      "description": "Aplikasi seluler yang terintegrasi dengan perangkat jam tangan pintar untuk memantau detak jantung, pola tidur, jumlah langkah harian, serta analisis kalori yang terbakar.",
+      "challenges": "Konektivitas Bluetooth Low Energy (BLE) yang stabil di berbagai perangkat Android dan iOS.",
+      "solutions": "Penggunaan pustaka BLE kustom dengan mekanisme auto-reconnect cerdas.",
+      "image": "./assets/images/project2.png",
+      "tech_stack": [
+        "Flutter",
+        "Dart",
+        "Firebase Firestore",
+        "Bluetooth LE API"
+      ],
+      "client": "HealthPulse Tech",
+      "period": "3 Bulan (2024)",
+      "created_at": "2025-12-27T00:00:00.000Z"
+    },
+    {
+      "id": "a3879e62-3778-4ae7-9823-91c9a768a050",
+      "title": "Quantum Server & Hosting Console",
+      "category": "Web Application",
+      "description": "Konsol manajemen server cloud terpusat yang memudahkan pengembang menyebarkan (deploy) kontainer Docker, mengelola sertifikat SSL, dan mengawasi kesehatan infrastruktur.",
+      "challenges": "Eksekusi perintah terminal jarak jauh secara aman dan pemantauan beban server.",
+      "solutions": "Koneksi SSH terenkripsi dan agen pemantauan berbasis Golang yang ringan.",
+      "image": "./assets/images/project3.png",
+      "tech_stack": [
+        "Vue.js 3",
+        "Golang",
+        "Docker API",
+        "Tailwind CSS",
+        "Linux CLI"
+      ],
+      "client": "Quantum Networks",
+      "period": "5 Bulan (2024)",
+      "created_at": "2025-12-26T00:00:00.000Z"
+    }
+  ],
+  "messages": []
+}

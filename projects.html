@@ -60,21 +60,6 @@
         <a href="contact.html" class="btn btn-primary btn-sm">
           <i class="fa-solid fa-paper-plane"></i> Hubungi Saya
         </a>
-        <!-- Auth Buttons (shown when logged out) -->
-        <div class="auth-nav-group" id="authNavGroup">
-          <a href="auth.html" class="btn btn-primary btn-sm" id="navLoginBtn">
-            <i class="fa-solid fa-right-to-bracket"></i> Login
-          </a>
-        </div>
-        <!-- User Info (shown when logged in) -->
-        <div class="auth-user-group" id="authUserGroup" style="display: none;">
-          <span class="auth-user-name" id="navUserName">
-            <i class="fa-solid fa-user-circle"></i> <span id="navUserNameText">User</span>
-          </span>
-          <button class="btn btn-outline btn-sm" id="navLogoutBtn">
-            <i class="fa-solid fa-right-from-bracket"></i> Keluar
-          </button>
-        </div>
       </div>
 
       <!-- Mobile Hamburger Toggle -->
@@ -99,19 +84,6 @@
       <a href="contact.html" class="btn btn-primary">
         <i class="fa-solid fa-paper-plane"></i> Hubungi Saya
       </a>
-      <div class="auth-nav-group" id="authNavGroupMobile">
-        <a href="auth.html" class="btn btn-primary">
-          <i class="fa-solid fa-right-to-bracket"></i> Login
-        </a>
-      </div>
-      <div class="auth-user-group" id="authUserGroupMobile" style="display: none;">
-        <span class="auth-user-name">
-          <i class="fa-solid fa-user-circle"></i> <span id="navUserNameTextMobile">User</span>
-        </span>
-        <button class="btn btn-outline" id="navLogoutBtnMobile">
-          <i class="fa-solid fa-right-from-bracket"></i> Keluar
-        </button>
-      </div>
     </div>
   </div>
 
@@ -135,170 +107,15 @@
   <main>
     <section class="projects-section" style="padding-top: 40px; padding-bottom: 80px;">
       <div class="container">
-        <!-- Category Filter Buttons -->
-        <div class="filter-controls">
-          <button class="filter-btn active" data-filter="all">Semua Proyek (6)</button>
-          <button class="filter-btn" data-filter="web">Web Application</button>
-          <button class="filter-btn" data-filter="mobile">Mobile App</button>
-          <button class="filter-btn" data-filter="design">UI/UX Design</button>
-        </div>
+        <!-- Category Filter Buttons (diisi dari kategori proyek) -->
+        <div class="filter-controls" id="projectFilters"></div>
 
-        <!-- Projects Cards Grid -->
+        <!-- Projects Cards Grid (diisi dari data/data.json) -->
         <div class="projects-grid" id="projectsGrid">
-
-          <!-- Project Card 1 -->
-          <article class="glass-card project-card" data-category="web" data-project-id="1">
-            <div class="project-img-box">
-              <img src="./assets/images/project1.png" alt="SaaS Analytics Dashboard">
-              <span class="project-badge">Web Application</span>
-              <div class="project-overlay">
-                <button class="btn btn-primary btn-sm view-project-btn" data-id="1">
-                  <i class="fa-solid fa-expand"></i> Detail Proyek
-                </button>
-              </div>
-            </div>
-            <div class="project-body">
-              <h3 class="project-title">SaaS Analytics & Cloud Dashboard</h3>
-              <p class="project-snippet">
-                Platform analytics SaaS performa tinggi dengan visualisasi grafik interaktif real-time dan manajemen
-                data skala besar.
-              </p>
-              <div class="project-tags">
-                <span class="tag">Laravel 10</span>
-                <span class="tag">React.js</span>
-                <span class="tag">Redis</span>
-                <span class="tag">Chart.js</span>
-              </div>
-            </div>
-          </article>
-
-          <!-- Project Card 2 -->
-          <article class="glass-card project-card" data-category="mobile" data-project-id="2">
-            <div class="project-img-box">
-              <img src="./assets/images/project2.png" alt="CryptoPay Mobile App">
-              <span class="project-badge" style="color: var(--secondary);">Mobile App</span>
-              <div class="project-overlay">
-                <button class="btn btn-primary btn-sm view-project-btn" data-id="2">
-                  <i class="fa-solid fa-expand"></i> Detail Proyek
-                </button>
-              </div>
-            </div>
-            <div class="project-body">
-              <h3 class="project-title">CryptoPay FinTech Companion App</h3>
-              <p class="project-snippet">
-                Aplikasi dompet kripto seluler interaktif dengan fitur transaksi cepat, keamanan biometrik, dan pantauan
-                portofolio.
-              </p>
-              <div class="project-tags">
-                <span class="tag">React Native</span>
-                <span class="tag">TypeScript</span>
-                <span class="tag">Web3.js</span>
-                <span class="tag">Redux</span>
-              </div>
-            </div>
-          </article>
-
-          <!-- Project Card 3 -->
-          <article class="glass-card project-card" data-category="design" data-project-id="3">
-            <div class="project-img-box">
-              <img src="./assets/images/project3.png" alt="Luxe Commerce Platform">
-              <span class="project-badge" style="color: var(--accent);">UI/UX Design</span>
-              <div class="project-overlay">
-                <button class="btn btn-primary btn-sm view-project-btn" data-id="3">
-                  <i class="fa-solid fa-expand"></i> Detail Proyek
-                </button>
-              </div>
-            </div>
-            <div class="project-body">
-              <h3 class="project-title">Luxe Commerce Luxury Storefront</h3>
-              <p class="project-snippet">
-                Desain sistem antarmuka eksklusif dark glassmorphism untuk platform belanja barang mewah kelas
-                internasional.
-              </p>
-              <div class="project-tags">
-                <span class="tag">Figma</span>
-                <span class="tag">UI/UX Research</span>
-                <span class="tag">Glassmorphism</span>
-              </div>
-            </div>
-          </article>
-
-          <!-- Project Card 4 -->
-          <article class="glass-card project-card" data-category="web" data-project-id="4">
-            <div class="project-img-box">
-              <img src="./assets/images/project1.png" alt="AI Content Creator Suite">
-              <span class="project-badge">Web Application</span>
-              <div class="project-overlay">
-                <button class="btn btn-primary btn-sm view-project-btn" data-id="4">
-                  <i class="fa-solid fa-expand"></i> Detail Proyek
-                </button>
-              </div>
-            </div>
-            <div class="project-body">
-              <h3 class="project-title">AI Content Generator Suite</h3>
-              <p class="project-snippet">
-                Aplikasi AI generatif untuk memproduksi artikel blog, postingan sosial media, dan aset visual otomatis
-                berbasis LLM.
-              </p>
-              <div class="project-tags">
-                <span class="tag">Next.js 14</span>
-                <span class="tag">OpenAI API</span>
-                <span class="tag">PostgreSQL</span>
-              </div>
-            </div>
-          </article>
-
-          <!-- Project Card 5 -->
-          <article class="glass-card project-card" data-category="mobile" data-project-id="5">
-            <div class="project-img-box">
-              <img src="./assets/images/project2.png" alt="HealthPulse Wearable">
-              <span class="project-badge" style="color: var(--secondary);">Mobile App</span>
-              <div class="project-overlay">
-                <button class="btn btn-primary btn-sm view-project-btn" data-id="5">
-                  <i class="fa-solid fa-expand"></i> Detail Proyek
-                </button>
-              </div>
-            </div>
-            <div class="project-body">
-              <h3 class="project-title">HealthPulse Smart Fitness Tracker</h3>
-              <p class="project-snippet">
-                Aplikasi kebugaran seluler yang terhubung langsung dengan perangkat smartwatch via Bluetooth LE.
-              </p>
-              <div class="project-tags">
-                <span class="tag">Flutter</span>
-                <span class="tag">Dart</span>
-                <span class="tag">Firebase</span>
-                <span class="tag">BLE API</span>
-              </div>
-            </div>
-          </article>
-
-          <!-- Project Card 6 -->
-          <article class="glass-card project-card" data-category="web" data-project-id="6">
-            <div class="project-img-box">
-              <img src="./assets/images/project3.png" alt="Quantum Cloud Architecture">
-              <span class="project-badge">Web Application</span>
-              <div class="project-overlay">
-                <button class="btn btn-primary btn-sm view-project-btn" data-id="6">
-                  <i class="fa-solid fa-expand"></i> Detail Proyek
-                </button>
-              </div>
-            </div>
-            <div class="project-body">
-              <h3 class="project-title">Quantum Server & Hosting Console</h3>
-              <p class="project-snippet">
-                Konsol manajemen server cloud terpusat untuk memantau kontainer Docker, SSL, dan infrastruktur sistem
-                secara real-time.
-              </p>
-              <div class="project-tags">
-                <span class="tag">Vue.js 3</span>
-                <span class="tag">Golang</span>
-                <span class="tag">Docker API</span>
-                <span class="tag">Linux</span>
-              </div>
-            </div>
-          </article>
-
+          <div class="projects-empty">
+            <i class="fa-solid fa-spinner fa-spin"></i>
+            <p>Memuat proyek...</p>
+          </div>
         </div>
       </div>
     </section>
@@ -441,9 +258,8 @@
     <span id="toastMessage">Pesan berhasil dikirim!</span>
   </div>
 
-  <!-- Auth Module -->
-  <script type="module" src="supabase.js"></script>
-  <script type="module" src="auth.js"></script>
+  <!-- API client (data lokal) -->
+  <script type="module" src="api-client.js"></script>
   <!-- Main JavaScript File -->
   <script type="module" src="notification.js"></script>
   <script type="module" src="script.js"></script>

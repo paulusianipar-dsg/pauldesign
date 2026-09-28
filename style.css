@@ -3192,3 +3192,453 @@ textarea.form-input {
     transform: translateY(0);
   }
 }
+
+/* ==========================================================================
+   15. DATA LOKAL & PERBAIKAN RESPONSIF
+   ========================================================================== */
+
+/* Cegah geser horizontal di mobile (glow latar & tombol nowrap). */
+html,
+body {
+  overflow-x: hidden;
+  max-width: 100%;
+}
+
+@supports (overflow: clip) {
+  html,
+  body {
+    overflow-x: clip;
+  }
+}
+
+/* Item grid boleh menyusut di bawah lebar konten minimumnya. */
+.hero-container > *,
+.contact-grid > *,
+.about-grid > *,
+.projects-grid > *,
+.admin-form-grid > * {
+  min-width: 0;
+}
+
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 100%;
+  padding: 8px 16px;
+  margin-bottom: 24px;
+  border-radius: var(--radius-full);
+  background: rgba(139, 92, 246, 0.1);
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  color: var(--text-main);
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+/* --- Login admin --- */
+.auth-wrapper-single {
+  grid-template-columns: 1fr;
+  max-width: 440px;
+}
+
+.auth-logo {
+  justify-content: center;
+  margin-bottom: 28px;
+}
+
+.auth-form-panel .auth-form-title,
+.auth-form-panel .auth-form-subtitle {
+  text-align: center;
+}
+
+/* --- Halaman proyek --- */
+.projects-empty {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 60px 20px;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.projects-empty i {
+  font-size: 2rem;
+  color: var(--text-dim);
+}
+
+.project-card:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 3px;
+}
+
+.project-modal-img {
+  width: 100%;
+  height: 300px;
+  object-fit: cover;
+  border-radius: 12px;
+  margin-bottom: 20px;
+}
+
+.project-modal-meta {
+  display: flex;
+  gap: 8px 16px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.project-modal-meta strong {
+  color: var(--text-muted);
+}
+
+.project-modal-text {
+  color: var(--text-muted);
+  line-height: 1.7;
+  margin-bottom: 16px;
+}
+
+/* --- Admin: elemen tabel & detail --- */
+.btn-danger-outline {
+  color: var(--accent);
+  border-color: rgba(244, 63, 94, 0.4);
+}
+
+.admin-project-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.admin-thumb {
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.admin-thumb-empty {
+  background: var(--bg-glass);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-dim);
+}
+
+.admin-cell-truncate {
+  max-width: 240px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-cell-actions {
+  white-space: nowrap;
+}
+
+.admin-cell-actions .btn + .btn {
+  margin-left: 4px;
+}
+
+.admin-table-empty {
+  text-align: center;
+  padding: 40px !important;
+  color: var(--text-muted) !important;
+}
+
+.admin-table-empty i {
+  font-size: 2rem;
+  display: block;
+  margin-bottom: 12px;
+}
+
+.admin-detail-row {
+  margin-bottom: 16px;
+}
+
+#messageModalBody strong {
+  color: var(--text-muted);
+}
+
+.admin-detail-value {
+  margin-top: 4px;
+  word-break: break-word;
+}
+
+.admin-detail-strong {
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.admin-message-body {
+  margin-top: 8px;
+  padding: 16px;
+  background: var(--bg-glass);
+  border: 1px solid var(--border-glass);
+  border-radius: var(--radius-md);
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.7;
+}
+
+.admin-image-upload-hint code {
+  font-family: var(--font-code, monospace);
+}
+
+.toast:not(.show) {
+  visibility: hidden;
+  transition: transform var(--transition-fast), visibility 0s linear 0.3s;
+}
+
+/* Tablet: kolom sekunder disembunyikan supaya kolom aksi tidak terpotong. */
+@media (min-width: 769px) and (max-width: 1100px) {
+  .admin-col-optional {
+    display: none;
+  }
+}
+
+/* --- Navbar tablet: pindah ke menu hamburger lebih awal
+       supaya link + tombol aksi tidak berdesakan. --- */
+@media (max-width: 1100px) {
+  .nav-links {
+    display: none;
+  }
+
+  .header-actions .btn {
+    display: none;
+  }
+
+  .mobile-menu-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .mobile-drawer {
+    display: block;
+    top: 68px;
+    border-radius: 0 0 20px 20px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8);
+    max-height: calc(100vh - 68px);
+    overflow-y: auto;
+  }
+}
+
+@media (max-width: 1024px) {
+  .hero-description {
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .admin-page-main {
+    padding-top: 100px;
+  }
+}
+
+@media (max-width: 768px) {
+  /* Tombol panjang boleh turun baris alih-alih melebarkan halaman. */
+  .btn {
+    white-space: normal;
+    text-align: center;
+  }
+
+  .toast {
+    left: 16px;
+    right: 16px;
+    bottom: 16px;
+  }
+
+  .modal-footer {
+    flex-wrap: wrap;
+  }
+
+  .modal-footer .btn {
+    flex: 1 1 auto;
+    justify-content: center;
+  }
+
+  .project-modal-img {
+    height: 200px;
+  }
+
+  .filter-controls {
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    overflow-x: auto;
+    padding-bottom: 8px;
+    margin-bottom: 28px;
+    scrollbar-width: none;
+  }
+
+  .filter-controls::-webkit-scrollbar {
+    display: none;
+  }
+
+  .filter-btn {
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+
+  /* --- Admin mobile --- */
+  .admin-page-main {
+    padding: 88px 0 32px;
+  }
+
+  .admin-welcome-badge {
+    display: none;
+  }
+
+  .admin-stats-row {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    flex-direction: initial;
+  }
+
+  .admin-stat-card {
+    min-width: 0;
+    padding: 12px;
+  }
+
+  .admin-stat-number {
+    font-size: 1.5rem;
+  }
+
+  .admin-tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+  }
+
+  .admin-tab {
+    flex-shrink: 0;
+  }
+
+  .admin-form-card,
+  .admin-table-card {
+    padding: 20px !important;
+  }
+
+  .admin-toolbar {
+    display: grid;
+    grid-template-columns: 1fr auto;
+  }
+
+  .admin-search-wrap {
+    grid-column: 1 / -1;
+  }
+
+  .admin-filter-select {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .admin-bulk-bar,
+  .admin-bulk-actions {
+    align-items: stretch;
+  }
+
+  /* Tabel admin berubah jadi kartu per baris. */
+  .admin-table-responsive thead {
+    display: none;
+  }
+
+  .admin-table-responsive,
+  .admin-table-responsive tbody,
+  .admin-table-responsive tr,
+  .admin-table-responsive td {
+    display: block;
+    width: 100%;
+  }
+
+  .admin-table-responsive tr {
+    position: relative;
+    padding: 12px 12px 12px 44px;
+    margin-bottom: 12px;
+    border: 1px solid var(--border-glass);
+    border-radius: var(--radius-md);
+    background: var(--bg-card);
+  }
+
+  .admin-table-responsive tr:hover td {
+    background: none;
+  }
+
+  .admin-table-responsive td {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 6px 0 !important;
+    border: none;
+    text-align: right;
+  }
+
+  .admin-table-responsive td[data-label]::before {
+    content: attr(data-label);
+    flex-shrink: 0;
+    color: var(--text-dim);
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    text-align: left;
+  }
+
+  .admin-table-responsive td.admin-col-check {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    width: auto;
+    padding: 0 !important;
+  }
+
+  .admin-table-responsive td.admin-cell-truncate {
+    max-width: none;
+  }
+
+  .admin-table-responsive td.admin-cell-truncate span {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .admin-table-responsive td.admin-cell-actions {
+    justify-content: flex-end;
+    padding-top: 10px !important;
+  }
+
+  .admin-table-responsive td.admin-cell-actions::before {
+    content: none;
+  }
+
+  .admin-table-responsive td.admin-table-empty {
+    display: block;
+    text-align: center;
+  }
+
+  .admin-table-responsive tr:has(.admin-table-empty) {
+    padding: 0;
+  }
+
+  .admin-project-cell {
+    justify-content: flex-end;
+    text-align: right;
+  }
+
+  .admin-row-selected {
+    border-color: rgba(99, 102, 241, 0.5) !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-badge {
+    font-size: 0.75rem;
+    padding: 6px 12px;
+  }
+
+  .auth-form-panel {
+    padding: 24px 18px;
+  }
+}

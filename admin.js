@@ -2,47 +2,21 @@
  * PaulFolio — Admin Dashboard Logic
  *
  * Menangani CRUD untuk:
- * - Projects   (tabel `projects`)
- * - Messages   (tabel `contact_messages`)
- * - Users      (tabel `profiles`)
+ * - Projects   (data.json → projects)
+ * - Messages   (data.json → messages)
  *
  * Fitur pendukung: pencarian, filter, pagination, bulk action,
- * tandai pesan dibaca, export CSV, dan upload gambar ke Supabase Storage.
+ * tandai pesan dibaca, export CSV, dan upload gambar ke folder uploads/.
  *
- * Hanya user dengan role 'admin' yang boleh mengakses dashboard ini.
- * Guard dilakukan di initAdmin() sebelum render apa pun.
- *
- * Catatan teknis: File ini sengaja TIDAK pakai ES module import/export
- * agar bisa dimuat sebagai <script> biasa. Semua dependensi diambil
- * dari global yang di-expose supabase.js dan auth.js.
- *
- * CATATAN RLS: policy admin memanggil public.is_admin() (SECURITY DEFINER).
- * Kalau policy itu diubah lagi menjadi subquery langsung ke `profiles`,
- * Postgres akan kena infinite recursion dan seluruh dashboard gagal.
+ * Semua data lewat API lokal (server/api.js) via window.api
+ * dari api-client.js. Guard sesi dilakukan di initAdmin().
  */
-
-/**
- * Tunggu client Supabase siap dipakai (supabase.js memuat SDK via CDN).
- * @returns {Promise<object|null>}
- */
-async function waitForSupabase() {
-  if (window.supabaseReady) {
-    await window.supabaseReady;
-  }
-  return window.supabase || null;
-}
 
 // ============================================================
 // KONSTANTA
 // ============================================================
-const STORAGE_BUCKET = 'project-images';
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 const PAGE_SIZE = 10;
-const ROLE_CLASS = {
-  admin: 'text-red',
-  designer: 'text-purple',
-  user: 'text-emerald',
-};
 
 // ============================================================
 // STATE & UTIL
@@ -50,22 +24,16 @@ const ROLE_CLASS = {
 const state = {
   projects: [],
   messages: [],
-  users: [],
   editingProjectId: null,
-  editingMessageId: null,
-  editingUserId: null,
   viewingMessageId: null,
   pendingImageFile: null,
-  removingImagePath: null,
   selection: {
     projects: new Set(),
     messages: new Set(),
-    users: new Set(),
   },
   filters: {
     projects: { search: '', category: '', page: 1 },
     messages: { search: '', read: '', page: 1 },
-    users: { search: '', role: '', page: 1 },
   },
 };
 
@@ -111,24 +79,22 @@ function formatDate(iso) {
   }
 }
 
-function friendlyError(err, fallback = 'Terjadi kesalahan.') {
-  if (!err) return fallback;
-  return err.message || fallback;
+/**
+ * Sesi habis di tengah jalan → kembali ke halaman login.
+ */
+function handleApiError(prefix, err) {
+  if (err && err.status === 401) {
+    window.location.href = 'auth.html';
+    return;
+  }
+  showToast(prefix + (err && err.message ? err.message : 'Terjadi kesalahan.'), true);
 }
 
 /**
- * Samakan huruf besar/kecil dan buang spasi untuk pencarian.
+ * Samakan huruf besar/kecil untuk pencarian.
  */
 function normalize(value) {
   return String(value == null ? '' : value).toLowerCase();
-}
-
-/**
- * Bangun query string untuk update based on daftar id.
- * Dipakai untuk bulk action Supabase yang butuh filter `.in(...)`.
- */
-function fetchByIds(table, ids) {
-  return window.supabase.from(table).select('*').in('id', ids);
 }
 
 // ============================================================
@@ -221,10 +187,6 @@ function getVisibleIds(key) {
   return info.slice.map(row => row.id);
 }
 
-function getSource(key) {
-  return state[key];
-}
-
 function getPaginated(key) {
   const items = filterRows(key);
   return paginate(items, state.filters[key].page);
@@ -261,24 +223,16 @@ function filterRows(key) {
     });
   }
 
-  if (key === 'messages') {
-    return state.messages.filter(m => {
-      if (f.read === 'unread' && m.is_read) return false;
-      if (f.read === 'read' && !m.is_read) return false;
-      if (!q) return true;
-      return (
-        normalize(m.name).includes(q) ||
-        normalize(m.email).includes(q) ||
-        normalize(m.subject).includes(q) ||
-        normalize(m.message).includes(q)
-      );
-    });
-  }
-
-  return state.users.filter(u => {
-    if (f.role && u.role !== f.role) return false;
+  return state.messages.filter(m => {
+    if (f.read === 'unread' && m.is_read) return false;
+    if (f.read === 'read' && !m.is_read) return false;
     if (!q) return true;
-    return normalize(u.name).includes(q) || normalize(u.email).includes(q);
+    return (
+      normalize(m.name).includes(q) ||
+      normalize(m.email).includes(q) ||
+      normalize(m.subject).includes(q) ||
+      normalize(m.message).includes(q)
+    );
   });
 }
 
@@ -301,7 +255,6 @@ function renderActiveTab() {
   const key = active.id.replace('tab-', '');
   if (key === 'projects') renderProjects();
   else if (key === 'messages') renderMessages();
-  else if (key === 'users') renderUsers();
 }
 
 // ============================================================
@@ -314,10 +267,11 @@ function updateStats() {
   };
 
   const unread = state.messages.filter(m => !m.is_read).length;
+  const categories = new Set(state.projects.map(p => p.category).filter(Boolean));
 
   set('statProjects', state.projects.length);
   set('statMessages', state.messages.length);
-  set('statUsers', state.users.length);
+  set('statCategories', categories.size);
   set('statUnread', unread);
 
   const pill = document.getElementById('messagesUnreadPill');
@@ -408,76 +362,15 @@ function exportMessages() {
   showToast(`Diekspor ${rows.length} pesan ke CSV.`);
 }
 
-function exportUsers() {
-  const rows = filterRows('users').map(u => [u.name, u.email, u.role, u.created_at]);
-  downloadCsv(`user-${stamp()}.csv`, toCsv(['Nama', 'Email', 'Role', 'Terdaftar'], rows));
-  showToast(`Diekspor ${rows.length} user ke CSV.`);
-}
-
-// ============================================================
-// AUTH GUARD
-// ============================================================
-async function requireAdmin() {
-  if (!window.isSupabaseConfigured()) {
-    return {
-      ok: false,
-      reason: 'unconfigured',
-      message: 'Supabase belum dikonfigurasi. Isi kredensial di supabase.js lalu refresh halaman.',
-    };
-  }
-
-  const client = await waitForSupabase();
-  if (!client) {
-    return {
-      ok: false,
-      reason: 'error',
-      message: 'Gagal memuat Supabase client. Periksa koneksi internet lalu refresh halaman.',
-    };
-  }
-
-  const user = await window.getCurrentUser();
-  if (!user) {
-    return { ok: false, reason: 'unauthenticated', message: 'Anda harus login sebagai admin.' };
-  }
-
-  const { data: profile, error } = await window.getCurrentProfile(user);
-  if (error) {
-    // 42P17 = infinite recursion di policy. Kasih petunjuk yang actionable.
-    const msg = String(error);
-    if (msg.includes('infinite recursion') || msg.includes('42P17')) {
-      return {
-        ok: false,
-        reason: 'error',
-        message:
-          'Policy RLS profiles bermasalah (infinite recursion). Jalankan ulang supabase-schema.sql di Supabase SQL Editor.',
-      };
-    }
-    return { ok: false, reason: 'error', message: 'Gagal memuat profil: ' + msg };
-  }
-  if (!profile) {
-    return { ok: false, reason: 'no-profile', message: 'Profil tidak ditemukan. Hubungi administrator.' };
-  }
-  if (profile.role !== 'admin') {
-    return { ok: false, reason: 'forbidden', message: 'Akses ditolak. Halaman ini khusus admin.' };
-  }
-
-  return { ok: true, user, profile };
-}
-
 // ============================================================
 // PROJECTS CRUD
 // ============================================================
 async function loadProjects() {
-  const { data, error } = await window.supabase
-    .from('projects')
-    .select('*')
-    .order('created_at', { ascending: false });
-
-  if (error) {
-    showToast('Gagal memuat proyek: ' + friendlyError(error), true);
+  try {
+    state.projects = await window.api.getProjects();
+  } catch (e) {
+    handleApiError('Gagal memuat proyek: ', e);
     state.projects = [];
-  } else {
-    state.projects = data || [];
   }
   refreshCategoryFilter();
   renderProjects();
@@ -494,8 +387,8 @@ function renderProjects() {
   if (info.total === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="8" style="text-align:center; padding: 40px; color: var(--text-muted);">
-          <i class="fa-solid fa-folder-open" style="font-size: 2rem; display:block; margin-bottom:12px;"></i>
+        <td colspan="8" class="admin-table-empty">
+          <i class="fa-solid fa-folder-open"></i>
           ${state.projects.length === 0
             ? 'Belum ada proyek. Tambahkan proyek pertama Anda.'
             : 'Tidak ada proyek yang cocok dengan filter.'}
@@ -512,24 +405,24 @@ function renderProjects() {
         <input type="checkbox" data-project-check="${escapeHtml(p.id)}"
           ${selected.has(p.id) ? 'checked' : ''} aria-label="Pilih ${escapeHtml(p.title)}">
       </td>
-      <td>
-        <div style="display:flex; align-items:center; gap:10px;">
+      <td data-label="Proyek">
+        <div class="admin-project-cell">
           ${p.image
-            ? `<img src="${escapeHtml(p.image)}" alt="" loading="lazy" style="width:48px; height:48px; object-fit:cover; border-radius:8px;">`
-            : `<div style="width:48px; height:48px; border-radius:8px; background:var(--bg-glass); display:flex; align-items:center; justify-content:center; color:var(--text-dim);"><i class="fa-solid fa-image"></i></div>`}
+            ? `<img src="${escapeHtml(p.image)}" alt="" loading="lazy" class="admin-thumb">`
+            : `<div class="admin-thumb admin-thumb-empty"><i class="fa-solid fa-image"></i></div>`}
           <strong>${escapeHtml(p.title)}</strong>
         </div>
       </td>
-      <td><span class="tag">${escapeHtml(p.category)}</span></td>
-      <td style="max-width:220px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtml(p.description || '-')}</td>
-      <td>${escapeHtml(p.client || '-')}</td>
-      <td>${escapeHtml(p.period || '-')}</td>
-      <td>${formatDate(p.created_at)}</td>
-      <td>
-        <button class="btn btn-outline btn-sm" onclick="window.adminEditProject('${escapeHtml(p.id)}')" title="Edit">
+      <td data-label="Kategori"><span class="tag">${escapeHtml(p.category)}</span></td>
+      <td data-label="Deskripsi" class="admin-cell-truncate"><span>${escapeHtml(p.description || '-')}</span></td>
+      <td data-label="Klien">${escapeHtml(p.client || '-')}</td>
+      <td data-label="Periode" class="admin-col-optional">${escapeHtml(p.period || '-')}</td>
+      <td data-label="Dibuat" class="admin-col-optional">${formatDate(p.created_at)}</td>
+      <td data-label="Aksi" class="admin-cell-actions">
+        <button class="btn btn-outline btn-sm" data-edit-project="${escapeHtml(p.id)}" title="Edit">
           <i class="fa-solid fa-pen"></i>
         </button>
-        <button class="btn btn-outline btn-sm" style="color:var(--accent); border-color:rgba(244,63,94,.4);" onclick="window.adminDeleteProject('${escapeHtml(p.id)}')" title="Hapus">
+        <button class="btn btn-outline btn-sm btn-danger-outline" data-delete-project="${escapeHtml(p.id)}" title="Hapus">
           <i class="fa-solid fa-trash"></i>
         </button>
       </td>
@@ -543,6 +436,12 @@ function renderProjects() {
       else state.selection.projects.delete(id);
       renderProjects();
     });
+  });
+  tbody.querySelectorAll('[data-edit-project]').forEach(btn => {
+    btn.addEventListener('click', () => editProject(btn.getAttribute('data-edit-project')));
+  });
+  tbody.querySelectorAll('[data-delete-project]').forEach(btn => {
+    btn.addEventListener('click', () => deleteProject(btn.getAttribute('data-delete-project')));
   });
 }
 
@@ -563,30 +462,9 @@ function updateImageClearButton() {
   btn.style.display = hasImage ? 'inline-flex' : 'none';
 }
 
-async function uploadProjectImage(file) {
-  const ext = (file.name.split('.').pop() || 'png').toLowerCase().replace(/[^a-z0-9]/g, '');
-  const path = `p-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
-
-  const { error } = await window.supabase.storage
-    .from(STORAGE_BUCKET)
-    .upload(path, file, { cacheControl: '3600', upsert: false });
-
-  if (error) throw error;
-
-  const { data } = window.supabase.storage.from(STORAGE_BUCKET).getPublicUrl(path);
-  return { path, url: data.publicUrl };
-}
-
-async function removeStoredImage(path) {
-  if (!path || !path.includes(`/${STORAGE_BUCKET}/`)) return;
-  const { error } = await window.supabase.storage.from(STORAGE_BUCKET).remove([path]);
-  if (error) console.warn('[Admin] Gagal menghapus gambar lama:', error.message);
-}
-
 function resetProjectForm() {
   state.editingProjectId = null;
   state.pendingImageFile = null;
-  state.removingImagePath = null;
 
   const form = document.getElementById('projectForm');
   if (form) form.reset();
@@ -596,6 +474,9 @@ function resetProjectForm() {
 
   const btn = document.getElementById('projectSubmitBtn');
   if (btn) btn.innerHTML = '<i class="fa-solid fa-plus"></i> Tambah Proyek';
+
+  const cancelBtn = document.getElementById('projectCancelBtn');
+  if (cancelBtn) cancelBtn.style.display = 'none';
 
   const title = document.getElementById('projectFormTitle');
   if (title) title.textContent = 'Tambah Proyek Baru';
@@ -611,7 +492,6 @@ async function handleProjectSubmit(event) {
 
   const title = document.getElementById('projectTitle').value.trim();
   const category = document.getElementById('projectCategory').value.trim();
-  const imageUrlInput = document.getElementById('projectImage').value.trim();
 
   if (!title || !category) {
     showToast('Judul dan kategori proyek wajib diisi.', true);
@@ -627,7 +507,9 @@ async function handleProjectSubmit(event) {
     title,
     category,
     description: document.getElementById('projectDescription').value.trim(),
-    image: imageUrlInput,
+    challenges: document.getElementById('projectChallenges').value.trim(),
+    solutions: document.getElementById('projectSolutions').value.trim(),
+    image: document.getElementById('projectImage').value.trim(),
     tech_stack: document.getElementById('projectTechStack').value
       .split(',')
       .map(t => t.trim())
@@ -641,44 +523,26 @@ async function handleProjectSubmit(event) {
     btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Menyimpan...';
   }
 
+  const isEdit = Boolean(state.editingProjectId);
   try {
+    // Gambar lama di uploads/ dihapus otomatis oleh server saat diganti.
     if (state.pendingImageFile) {
-      const uploaded = await uploadProjectImage(state.pendingImageFile);
-      payload.image = uploaded.url;
-      await removeStoredImage(state.removingImagePath);
-    } else if (payload.image && state.removingImagePath) {
-      // Gambar diganti dengan URL lain, bersihkan file storage yang lama.
-      await removeStoredImage(state.removingImagePath);
+      payload.image = await window.api.uploadImage(state.pendingImageFile);
     }
 
-    state.removingImagePath = null;
+    if (isEdit) await window.api.updateProject(state.editingProjectId, payload);
+    else await window.api.createProject(payload);
 
-    let error = null;
-    if (state.editingProjectId) {
-      const res = await window.supabase
-        .from('projects')
-        .update(payload)
-        .eq('id', state.editingProjectId);
-      error = res.error;
-    } else {
-      const res = await window.supabase.from('projects').insert(payload);
-      error = res.error;
-    }
-
-    if (error) {
-      showToast('Gagal menyimpan proyek: ' + friendlyError(error), true);
-    } else {
-      showToast(state.editingProjectId ? 'Proyek berhasil diperbarui.' : 'Proyek berhasil ditambahkan.');
-      resetProjectForm();
-      await loadProjects();
-      updateStats();
-    }
+    showToast(isEdit ? 'Proyek berhasil diperbarui.' : 'Proyek berhasil ditambahkan.');
+    resetProjectForm();
+    await loadProjects();
+    updateStats();
   } catch (e) {
-    showToast('Gagal menyimpan proyek: ' + friendlyError(e), true);
+    handleApiError('Gagal menyimpan proyek: ', e);
   } finally {
     if (btn) {
       btn.disabled = false;
-      btn.innerHTML = originalText;
+      if (btn.innerHTML.includes('fa-spinner')) btn.innerHTML = originalText;
     }
   }
 }
@@ -690,26 +554,30 @@ function editProject(id) {
   state.editingProjectId = id;
   state.pendingImageFile = null;
 
-  const urlInput = document.getElementById('projectImage');
-  if (urlInput) urlInput.value = p.image || '';
+  const fileInput = document.getElementById('projectImageFile');
+  if (fileInput) fileInput.value = '';
 
-  // Simpan path storage lama supaya bisa dihapus saat user ganti gambar.
-  if (p.image && p.image.includes(`/${STORAGE_BUCKET}/`)) {
-    const match = p.image.split(`/${STORAGE_BUCKET}/`)[1];
-    state.removingImagePath = match ? `${STORAGE_BUCKET}/${match}` : null;
-  } else {
-    state.removingImagePath = null;
-  }
-
+  document.getElementById('projectImage').value = p.image || '';
   document.getElementById('projectTitle').value = p.title || '';
   document.getElementById('projectCategory').value = p.category || '';
   document.getElementById('projectDescription').value = p.description || '';
+  document.getElementById('projectChallenges').value = p.challenges || '';
+  document.getElementById('projectSolutions').value = p.solutions || '';
   document.getElementById('projectTechStack').value = Array.isArray(p.tech_stack) ? p.tech_stack.join(', ') : '';
   document.getElementById('projectClient').value = p.client || '';
   document.getElementById('projectPeriod').value = p.period || '';
 
+  // Kategori lama di luar daftar opsi tetap bisa diedit.
+  const categorySelect = document.getElementById('projectCategory');
+  if (p.category && categorySelect.value !== p.category) {
+    categorySelect.add(new Option(p.category, p.category));
+    categorySelect.value = p.category;
+  }
+
   const btn = document.getElementById('projectSubmitBtn');
   if (btn) btn.innerHTML = '<i class="fa-solid fa-check"></i> Simpan Perubahan';
+  const cancelBtn = document.getElementById('projectCancelBtn');
+  if (cancelBtn) cancelBtn.style.display = 'inline-flex';
   const title = document.getElementById('projectFormTitle');
   if (title) title.textContent = 'Edit Proyek';
 
@@ -723,18 +591,15 @@ async function deleteProject(id) {
   if (!p) return;
   if (!confirm(`Hapus proyek "${p.title}"? Tindakan ini tidak bisa dibatalkan.`)) return;
 
-  const { error } = await window.supabase.from('projects').delete().eq('id', id);
-  if (error) {
-    showToast('Gagal menghapus proyek: ' + friendlyError(error), true);
-  } else {
+  try {
+    await window.api.deleteProjects([id]);
     showToast('Proyek berhasil dihapus.');
     if (state.editingProjectId === id) resetProjectForm();
-    if (p.image && p.image.includes(`/${STORAGE_BUCKET}/`)) {
-      await removeStoredImage(p.image.split(`/${STORAGE_BUCKET}/`)[1]);
-    }
     state.selection.projects.delete(id);
     await loadProjects();
     updateStats();
+  } catch (e) {
+    handleApiError('Gagal menghapus proyek: ', e);
   }
 }
 
@@ -743,44 +608,27 @@ async function bulkDeleteProjects() {
   if (ids.length === 0) return;
   if (!confirm(`Hapus ${ids.length} proyek sekaligus? Tindakan ini tidak bisa dibatalkan.`)) return;
 
-  const { data, error } = await fetchByIds('projects', ids);
-  if (error) {
-    showToast('Gagal menghapus proyek: ' + friendlyError(error), true);
-    return;
+  try {
+    await window.api.deleteProjects(ids);
+    if (ids.includes(state.editingProjectId)) resetProjectForm();
+    clearSelection('projects');
+    showToast(`${ids.length} proyek berhasil dihapus.`);
+    await loadProjects();
+    updateStats();
+  } catch (e) {
+    handleApiError('Gagal menghapus proyek: ', e);
   }
-
-  const { error: delError } = await window.supabase.from('projects').delete().in('id', ids);
-  if (delError) {
-    showToast('Gagal menghapus proyek: ' + friendlyError(delError), true);
-    return;
-  }
-
-  for (const p of data || []) {
-    if (p.image && p.image.includes(`/${STORAGE_BUCKET}/`)) {
-      await removeStoredImage(p.image.split(`/${STORAGE_BUCKET}/`)[1]);
-    }
-  }
-
-  clearSelection('projects');
-  showToast(`${ids.length} proyek berhasil dihapus.`);
-  await loadProjects();
-  updateStats();
 }
 
 // ============================================================
 // MESSAGES CRUD
 // ============================================================
 async function loadMessages() {
-  const { data, error } = await window.supabase
-    .from('contact_messages')
-    .select('*')
-    .order('created_at', { ascending: false });
-
-  if (error) {
-    showToast('Gagal memuat pesan: ' + friendlyError(error), true);
+  try {
+    state.messages = await window.api.getMessages();
+  } catch (e) {
+    handleApiError('Gagal memuat pesan: ', e);
     state.messages = [];
-  } else {
-    state.messages = data || [];
   }
   renderMessages();
 }
@@ -796,8 +644,8 @@ function renderMessages() {
   if (info.total === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="8" style="text-align:center; padding: 40px; color: var(--text-muted);">
-          <i class="fa-solid fa-inbox" style="font-size: 2rem; display:block; margin-bottom:12px;"></i>
+        <td colspan="8" class="admin-table-empty">
+          <i class="fa-solid fa-inbox"></i>
           ${state.messages.length === 0
             ? 'Belum ada pesan masuk.'
             : 'Tidak ada pesan yang cocok dengan filter.'}
@@ -814,25 +662,25 @@ function renderMessages() {
         <input type="checkbox" data-message-check="${escapeHtml(m.id)}"
           ${selected.has(m.id) ? 'checked' : ''} aria-label="Pilih pesan dari ${escapeHtml(m.name)}">
       </td>
-      <td>
+      <td data-label="Status">
         ${m.is_read
           ? '<span class="admin-read-badge read"><i class="fa-solid fa-envelope-open"></i> Dibaca</span>'
           : '<span class="admin-read-badge unread"><i class="fa-solid fa-envelope"></i> Baru</span>'}
       </td>
-      <td><strong>${escapeHtml(m.name)}</strong></td>
-      <td>${escapeHtml(m.email)}</td>
-      <td>${escapeHtml(m.subject || '-')}</td>
-      <td style="max-width:260px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtml(m.message)}</td>
-      <td>${formatDate(m.created_at)}</td>
-      <td>
-        <button class="btn btn-outline btn-sm" onclick="window.adminViewMessage('${escapeHtml(m.id)}')" title="Lihat Detail">
+      <td data-label="Nama"><strong>${escapeHtml(m.name)}</strong></td>
+      <td data-label="Email">${escapeHtml(m.email)}</td>
+      <td data-label="Subjek">${escapeHtml(m.subject || '-')}</td>
+      <td data-label="Pesan" class="admin-cell-truncate"><span>${escapeHtml(m.message)}</span></td>
+      <td data-label="Tanggal" class="admin-col-optional">${formatDate(m.created_at)}</td>
+      <td data-label="Aksi" class="admin-cell-actions">
+        <button class="btn btn-outline btn-sm" data-view-message="${escapeHtml(m.id)}" title="Lihat Detail">
           <i class="fa-solid fa-eye"></i>
         </button>
-        <button class="btn btn-outline btn-sm" onclick="window.adminToggleRead('${escapeHtml(m.id)}')"
+        <button class="btn btn-outline btn-sm" data-toggle-message="${escapeHtml(m.id)}"
           title="${m.is_read ? 'Tandai belum dibaca' : 'Tandai sudah dibaca'}">
           <i class="fa-solid ${m.is_read ? 'fa-envelope' : 'fa-envelope-open'}"></i>
         </button>
-        <button class="btn btn-outline btn-sm" style="color:var(--accent); border-color:rgba(244,63,94,.4);" onclick="window.adminDeleteMessage('${escapeHtml(m.id)}')" title="Hapus">
+        <button class="btn btn-outline btn-sm btn-danger-outline" data-delete-message="${escapeHtml(m.id)}" title="Hapus">
           <i class="fa-solid fa-trash"></i>
         </button>
       </td>
@@ -847,6 +695,15 @@ function renderMessages() {
       renderMessages();
     });
   });
+  tbody.querySelectorAll('[data-view-message]').forEach(btn => {
+    btn.addEventListener('click', () => viewMessage(btn.getAttribute('data-view-message')));
+  });
+  tbody.querySelectorAll('[data-toggle-message]').forEach(btn => {
+    btn.addEventListener('click', () => toggleMessageRead(btn.getAttribute('data-toggle-message')));
+  });
+  tbody.querySelectorAll('[data-delete-message]').forEach(btn => {
+    btn.addEventListener('click', () => deleteMessage(btn.getAttribute('data-delete-message')));
+  });
 }
 
 function closeMessageModal() {
@@ -855,7 +712,7 @@ function closeMessageModal() {
   state.viewingMessageId = null;
 }
 
-async function viewMessage(id) {
+function viewMessage(id) {
   const m = state.messages.find(x => x.id === id);
   if (!m) return;
 
@@ -866,29 +723,29 @@ async function viewMessage(id) {
   if (!modal || !body) return;
 
   body.innerHTML = `
-    <div style="margin-bottom:16px;">
-      <strong style="color:var(--text-muted);">Dari:</strong>
-      <div style="font-size:1.05rem; font-weight:600; margin-top:4px;">${escapeHtml(m.name)} &lt;${escapeHtml(m.email)}&gt;</div>
+    <div class="admin-detail-row">
+      <strong>Dari:</strong>
+      <div class="admin-detail-value admin-detail-strong">${escapeHtml(m.name)} &lt;${escapeHtml(m.email)}&gt;</div>
     </div>
-    <div style="margin-bottom:16px;">
-      <strong style="color:var(--text-muted);">Subjek:</strong>
-      <div style="margin-top:4px;">${escapeHtml(m.subject || '-')}</div>
+    <div class="admin-detail-row">
+      <strong>Subjek:</strong>
+      <div class="admin-detail-value">${escapeHtml(m.subject || '-')}</div>
     </div>
-    <div style="margin-bottom:16px;">
-      <strong style="color:var(--text-muted);">Tanggal:</strong>
-      <div style="margin-top:4px;">${formatDate(m.created_at)}</div>
+    <div class="admin-detail-row">
+      <strong>Tanggal:</strong>
+      <div class="admin-detail-value">${formatDate(m.created_at)}</div>
     </div>
-    <div style="margin-bottom:16px;">
-      <strong style="color:var(--text-muted);">Status:</strong>
-      <div style="margin-top:4px;">
+    <div class="admin-detail-row">
+      <strong>Status:</strong>
+      <div class="admin-detail-value">
         ${m.is_read
           ? '<span class="admin-read-badge read"><i class="fa-solid fa-envelope-open"></i> Sudah dibaca</span>'
           : '<span class="admin-read-badge unread"><i class="fa-solid fa-envelope"></i> Belum dibaca</span>'}
       </div>
     </div>
     <div>
-      <strong style="color:var(--text-muted);">Pesan:</strong>
-      <div style="margin-top:8px; padding:16px; background:var(--bg-glass); border:1px solid var(--border-glass); border-radius:var(--radius-md); white-space:pre-wrap; line-height:1.7;">${escapeHtml(m.message)}</div>
+      <strong>Pesan:</strong>
+      <div class="admin-message-body">${escapeHtml(m.message)}</div>
     </div>
   `;
 
@@ -902,43 +759,12 @@ async function viewMessage(id) {
   modal.classList.add('active');
 }
 
-async function setMessageRead(id, isRead) {
-  const { error } = await window.supabase
-    .from('contact_messages')
-    .update({ is_read: isRead })
-    .eq('id', id);
-
-  if (error) {
-    showToast('Gagal mengubah status pesan: ' + friendlyError(error), true);
-    return;
-  }
-
-  const local = state.messages.find(m => m.id === id);
-  if (local) local.is_read = isRead;
-  updateStats();
-  await loadMessages();
-
-  if (state.viewingMessageId === id) {
-    viewMessage(id);
-  }
-}
-
-async function toggleMessageRead(id) {
-  const m = state.messages.find(x => x.id === id);
-  if (!m) return;
-  await setMessageRead(id, !m.is_read);
-  showToast(m.is_read ? 'Pesan ditandai belum dibaca.' : 'Pesan ditandai sudah dibaca.');
-}
-
-async function bulkSetMessageRead(ids, isRead) {
+async function bulkSetMessageRead(ids, isRead, silent = false) {
   if (ids.length === 0) return;
-  const { error } = await window.supabase
-    .from('contact_messages')
-    .update({ is_read: isRead })
-    .in('id', ids);
-
-  if (error) {
-    showToast('Gagal memperbarui status pesan: ' + friendlyError(error), true);
+  try {
+    await window.api.markMessages(ids, isRead);
+  } catch (e) {
+    handleApiError('Gagal memperbarui status pesan: ', e);
     return;
   }
 
@@ -948,8 +774,17 @@ async function bulkSetMessageRead(ids, isRead) {
   });
 
   updateStats();
-  await loadMessages();
-  showToast(`${ids.length} pesan ditandai ${isRead ? 'sudah dibaca' : 'belum dibaca'}.`);
+  renderMessages();
+  if (state.viewingMessageId && ids.includes(state.viewingMessageId)) viewMessage(state.viewingMessageId);
+  if (!silent) showToast(`${ids.length} pesan ditandai ${isRead ? 'sudah dibaca' : 'belum dibaca'}.`);
+}
+
+async function toggleMessageRead(id) {
+  const m = state.messages.find(x => x.id === id);
+  if (!m) return;
+  const next = !m.is_read;
+  await bulkSetMessageRead([id], next, true);
+  showToast(next ? 'Pesan ditandai sudah dibaca.' : 'Pesan ditandai belum dibaca.');
 }
 
 async function deleteMessage(id) {
@@ -957,15 +792,15 @@ async function deleteMessage(id) {
   if (!m) return;
   if (!confirm(`Hapus pesan dari "${m.name}"?`)) return;
 
-  const { error } = await window.supabase.from('contact_messages').delete().eq('id', id);
-  if (error) {
-    showToast('Gagal menghapus pesan: ' + friendlyError(error), true);
-  } else {
+  try {
+    await window.api.deleteMessages([id]);
     showToast('Pesan berhasil dihapus.');
     if (state.viewingMessageId === id) closeMessageModal();
     state.selection.messages.delete(id);
     await loadMessages();
     updateStats();
+  } catch (e) {
+    handleApiError('Gagal menghapus pesan: ', e);
   }
 }
 
@@ -974,16 +809,15 @@ async function bulkDeleteMessages() {
   if (ids.length === 0) return;
   if (!confirm(`Hapus ${ids.length} pesan sekaligus?`)) return;
 
-  const { error } = await window.supabase.from('contact_messages').delete().in('id', ids);
-  if (error) {
-    showToast('Gagal menghapus pesan: ' + friendlyError(error), true);
-    return;
+  try {
+    await window.api.deleteMessages(ids);
+    clearSelection('messages');
+    showToast(`${ids.length} pesan berhasil dihapus.`);
+    await loadMessages();
+    updateStats();
+  } catch (e) {
+    handleApiError('Gagal menghapus pesan: ', e);
   }
-
-  clearSelection('messages');
-  showToast(`${ids.length} pesan berhasil dihapus.`);
-  await loadMessages();
-  updateStats();
 }
 
 function replyToMessage() {
@@ -994,205 +828,8 @@ function replyToMessage() {
 }
 
 // ============================================================
-// USERS CRUD
+// SELECT ALL HANDLER (umum untuk semua tabel)
 // ============================================================
-async function loadUsers() {
-  const { data, error } = await window.supabase
-    .from('profiles')
-    .select('*')
-    .order('created_at', { ascending: false });
-
-  if (error) {
-    showToast('Gagal memuat user: ' + friendlyError(error), true);
-    state.users = [];
-  } else {
-    state.users = data || [];
-  }
-  renderUsers();
-}
-
-function renderUsers() {
-  const tbody = document.getElementById('usersTableBody');
-  if (!tbody) return;
-
-  const info = getPaginated('users');
-  updateBulkBar('users', 'userBulkBar', 'userSelectedCount');
-  renderPagination('userPagination', info, 'user');
-
-  if (info.total === 0) {
-    tbody.innerHTML = `
-      <tr>
-        <td colspan="7" style="text-align:center; padding: 40px; color: var(--text-muted);">
-          <i class="fa-solid fa-users" style="font-size: 2rem; display:block; margin-bottom:12px;"></i>
-          ${state.users.length === 0
-            ? 'Belum ada user terdaftar.'
-            : 'Tidak ada user yang cocok dengan filter.'}
-        </td>
-      </tr>`;
-    return;
-  }
-
-  const selected = state.selection.users;
-
-  tbody.innerHTML = info.slice.map(u => {
-    const roleClass = ROLE_CLASS[u.role] || '';
-    return `
-    <tr class="${selected.has(u.id) ? 'admin-row-selected' : ''}">
-      <td class="admin-col-check">
-        <input type="checkbox" data-user-check="${escapeHtml(u.id)}"
-          ${selected.has(u.id) ? 'checked' : ''} aria-label="Pilih ${escapeHtml(u.name)}">
-      </td>
-      <td>${escapeHtml(u.name)}</td>
-      <td>${escapeHtml(u.email)}</td>
-      <td><span class="${roleClass}" style="font-weight:600; text-transform:capitalize;">${escapeHtml(u.role)}</span></td>
-      <td>${formatDate(u.created_at)}</td>
-      <td>
-        <select data-role-select="${escapeHtml(u.id)}"
-          style="background:var(--bg-card); color:var(--text-main); border:1px solid var(--border-glass); border-radius:8px; padding:6px 10px; font-size:0.85rem;">
-          <option value="user" ${u.role === 'user' ? 'selected' : ''}>user</option>
-          <option value="designer" ${u.role === 'designer' ? 'selected' : ''}>designer</option>
-          <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>admin</option>
-        </select>
-      </td>
-      <td>
-        <button class="btn btn-outline btn-sm" style="color:var(--accent); border-color:rgba(244,63,94,.4);" onclick="window.adminDeleteUser('${escapeHtml(u.id)}')" title="Hapus User">
-          <i class="fa-solid fa-trash"></i>
-        </button>
-      </td>
-    </tr>
-  `;}).join('');
-
-  tbody.querySelectorAll('[data-user-check]').forEach(box => {
-    box.addEventListener('change', () => {
-      const id = box.getAttribute('data-user-check');
-      if (box.checked) state.selection.users.add(id);
-      else state.selection.users.delete(id);
-      renderUsers();
-    });
-  });
-
-  // Select role di-bind via listener, bukan inline onchange, supaya
-  // tag HTML tidak harus meng-escape nilai id.
-  tbody.querySelectorAll('[data-role-select]').forEach(select => {
-    select.addEventListener('change', () => {
-      changeRole(select.getAttribute('data-role-select'), select.value);
-    });
-  });
-}
-
-async function changeRole(userId, newRole) {
-  if (!['user', 'designer', 'admin'].includes(newRole)) return;
-
-  const target = state.users.find(u => u.id === userId);
-  if (!target) return;
-
-  const currentUser = await window.getCurrentUser();
-  if (currentUser && currentUser.id === userId && target.role === 'admin' && newRole !== 'admin') {
-    showToast('Anda tidak dapat menurunkan role admin sendiri.', true);
-    await loadUsers();
-    return;
-  }
-
-  if (!confirm(`Ubah role "${target.name}" menjadi "${newRole}"?`)) {
-    await loadUsers(); // reset select
-    return;
-  }
-
-  const { error } = await window.supabase
-    .from('profiles')
-    .update({ role: newRole })
-    .eq('id', userId);
-
-  if (error) {
-    showToast('Gagal mengubah role: ' + friendlyError(error), true);
-    await loadUsers();
-  } else {
-    showToast(`Role "${target.name}" berhasil diubah menjadi "${newRole}".`);
-    await loadUsers();
-    updateStats();
-  }
-}
-
-async function bulkChangeRole(newRole) {
-  const ids = [...state.selection.users];
-  if (ids.length === 0) return;
-  if (!['user', 'designer', 'admin'].includes(newRole)) {
-    showToast('Pilih role tujuan terlebih dahulu.', true);
-    return;
-  }
-  if (!confirm(`Ubah role ${ids.length} user menjadi "${newRole}"?`)) return;
-
-  const currentUser = await window.getCurrentUser();
-  if (currentUser && ids.includes(currentUser.id) && newRole !== 'admin') {
-    showToast('Anda tidak dapat menurunkan role admin sendiri.', true);
-    await loadUsers();
-    return;
-  }
-
-  const { error } = await window.supabase
-    .from('profiles')
-    .update({ role: newRole })
-    .in('id', ids);
-
-  if (error) {
-    showToast('Gagal mengubah role: ' + friendlyError(error), true);
-    return;
-  }
-
-  showToast(`${ids.length} user berhasil diubah menjadi "${newRole}".`);
-  await loadUsers();
-}
-
-async function deleteUser(userId) {
-  const target = state.users.find(u => u.id === userId);
-  if (!target) return;
-
-  const currentUser = await window.getCurrentUser();
-  if (currentUser && currentUser.id === userId) {
-    showToast('Anda tidak dapat menghapus akun sendiri.', true);
-    return;
-  }
-
-  if (!confirm(`Hapus user "${target.name}" (${target.email})? Data auth user harus dihapus manual di dashboard Supabase.`)) return;
-
-  const { error } = await window.supabase.from('profiles').delete().eq('id', userId);
-  if (error) {
-    showToast('Gagal menghapus user: ' + friendlyError(error), true);
-  } else {
-    showToast('User berhasil dihapus.');
-    state.selection.users.delete(userId);
-    await loadUsers();
-    updateStats();
-  }
-}
-
-async function bulkDeleteUsers() {
-  const ids = [...state.selection.users];
-  if (ids.length === 0) return;
-
-  const currentUser = await window.getCurrentUser();
-  const selfIds = currentUser ? ids.filter(id => id === currentUser.id) : [];
-  if (selfIds.length > 0) {
-    showToast('Anda tidak dapat menghapus akun sendiri. Deselect baris Anda lalu coba lagi.', true);
-    return;
-  }
-
-  if (!confirm(`Hapus ${ids.length} user sekaligus? Data auth harus dihapus manual di dashboard Supabase.`)) return;
-
-  const { error } = await window.supabase.from('profiles').delete().in('id', ids);
-  if (error) {
-    showToast('Gagal menghapus user: ' + friendlyError(error), true);
-    return;
-  }
-
-  clearSelection('users');
-  showToast(`${ids.length} user berhasil dihapus.`);
-  await loadUsers();
-  updateStats();
-}
-
-// ============================================================
-// SELECT ALL HANDLER (umum untuk 3 tabel)
 function bindSelectAll(key, renderFn) {
   const selectAll = document.getElementById(key + 'SelectAll');
   if (!selectAll) return;
@@ -1223,16 +860,36 @@ function switchTab(tabName) {
 // ============================================================
 // BIND SEMUA EVENT
 // ============================================================
+function bindSearch(inputId, key, renderFn) {
+  const input = document.getElementById(inputId);
+  if (!input) return;
+  let t;
+  input.addEventListener('input', () => {
+    clearTimeout(t);
+    t = setTimeout(() => {
+      state.filters[key].search = input.value;
+      state.filters[key].page = 1;
+      renderFn();
+    }, 200);
+  });
+}
+
+function bindClick(id, handler) {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('click', handler);
+}
+
 function bindEvents() {
   // Logout (desktop + mobile)
   const doLogout = async () => {
-    await window.signOut();
-    window.location.href = 'index.html';
+    try {
+      await window.api.logout();
+    } finally {
+      window.location.href = 'auth.html';
+    }
   };
-  const logoutBtn = document.getElementById('adminLogoutBtn');
-  if (logoutBtn) logoutBtn.addEventListener('click', doLogout);
-  const logoutBtnMobile = document.getElementById('adminLogoutBtnMobile');
-  if (logoutBtnMobile) logoutBtnMobile.addEventListener('click', doLogout);
+  bindClick('adminLogoutBtn', doLogout);
+  bindClick('adminLogoutBtnMobile', doLogout);
 
   // Tab
   document.querySelectorAll('.admin-tab').forEach(tab => {
@@ -1240,25 +897,23 @@ function bindEvents() {
   });
 
   // Stat card "belum dibaca" bisa diklik untuk lompat ke tab pesan
-  const unreadCard = document.getElementById('statUnreadCard');
-  if (unreadCard) {
-    unreadCard.addEventListener('click', () => {
-      state.filters.messages.read = 'unread';
-      state.filters.messages.page = 1;
-      const filterSelect = document.getElementById('messageReadFilter');
-      if (filterSelect) filterSelect.value = 'unread';
-      switchTab('messages');
-    });
-  }
+  bindClick('statUnreadCard', () => {
+    state.filters.messages.read = 'unread';
+    state.filters.messages.page = 1;
+    const filterSelect = document.getElementById('messageReadFilter');
+    if (filterSelect) filterSelect.value = 'unread';
+    switchTab('messages');
+  });
 
   // --- Project form ---
   const projectForm = document.getElementById('projectForm');
   if (projectForm) projectForm.addEventListener('submit', handleProjectSubmit);
 
-  const cancelProjectBtn = document.getElementById('projectCancelBtn');
-  if (cancelProjectBtn) cancelProjectBtn.addEventListener('click', resetProjectForm);
+  bindClick('projectCancelBtn', resetProjectForm);
 
   const imageFileInput = document.getElementById('projectImageFile');
+  const imageUrlInput = document.getElementById('projectImage');
+
   if (imageFileInput) {
     imageFileInput.addEventListener('change', () => {
       const file = imageFileInput.files && imageFileInput.files[0];
@@ -1268,7 +923,7 @@ function bindEvents() {
           showToast('Ukuran gambar melebihi 5 MB.', true);
           imageFileInput.value = '';
           state.pendingImageFile = null;
-          updateImagePreview(document.getElementById('projectImage').value.trim());
+          updateImagePreview(imageUrlInput.value.trim());
           updateImageClearButton();
           return;
         }
@@ -1278,7 +933,6 @@ function bindEvents() {
     });
   }
 
-  const imageUrlInput = document.getElementById('projectImage');
   if (imageUrlInput) {
     imageUrlInput.addEventListener('input', () => {
       // URL manual menimpa preview file yang dipilih.
@@ -1291,30 +945,16 @@ function bindEvents() {
     });
   }
 
-  const imageClearBtn = document.getElementById('projectImageClearBtn');
-  if (imageClearBtn) {
-    imageClearBtn.addEventListener('click', () => {
-      state.pendingImageFile = null;
-      if (imageUrlInput) imageUrlInput.value = '';
-      if (imageFileInput) imageFileInput.value = '';
-      updateImagePreview('');
-      updateImageClearButton();
-    });
-  }
+  bindClick('projectImageClearBtn', () => {
+    state.pendingImageFile = null;
+    if (imageUrlInput) imageUrlInput.value = '';
+    if (imageFileInput) imageFileInput.value = '';
+    updateImagePreview('');
+    updateImageClearButton();
+  });
 
   // --- Projects toolbar ---
-  const projectSearch = document.getElementById('projectSearch');
-  if (projectSearch) {
-    let t;
-    projectSearch.addEventListener('input', () => {
-      clearTimeout(t);
-      t = setTimeout(() => {
-        state.filters.projects.search = projectSearch.value;
-        state.filters.projects.page = 1;
-        renderProjects();
-      }, 200);
-    });
-  }
+  bindSearch('projectSearch', 'projects', renderProjects);
 
   const projectCategoryFilter = document.getElementById('projectCategoryFilter');
   if (projectCategoryFilter) {
@@ -1325,32 +965,13 @@ function bindEvents() {
     });
   }
 
-  const projectExportBtn = document.getElementById('projectExportBtn');
-  if (projectExportBtn) projectExportBtn.addEventListener('click', exportProjects);
-
-  const projectBulkDeleteBtn = document.getElementById('projectBulkDeleteBtn');
-  if (projectBulkDeleteBtn) projectBulkDeleteBtn.addEventListener('click', bulkDeleteProjects);
-
-  const projectBulkClearBtn = document.getElementById('projectBulkClearBtn');
-  if (projectBulkClearBtn) {
-    projectBulkClearBtn.addEventListener('click', () => clearSelection('projects'));
-  }
-
+  bindClick('projectExportBtn', exportProjects);
+  bindClick('projectBulkDeleteBtn', bulkDeleteProjects);
+  bindClick('projectBulkClearBtn', () => clearSelection('projects'));
   bindSelectAll('projects', renderProjects);
 
   // --- Messages toolbar ---
-  const messageSearch = document.getElementById('messageSearch');
-  if (messageSearch) {
-    let t;
-    messageSearch.addEventListener('input', () => {
-      clearTimeout(t);
-      t = setTimeout(() => {
-        state.filters.messages.search = messageSearch.value;
-        state.filters.messages.page = 1;
-        renderMessages();
-      }, 200);
-    });
-  }
+  bindSearch('messageSearch', 'messages', renderMessages);
 
   const messageReadFilter = document.getElementById('messageReadFilter');
   if (messageReadFilter) {
@@ -1361,89 +982,20 @@ function bindEvents() {
     });
   }
 
-  const messageExportBtn = document.getElementById('messageExportBtn');
-  if (messageExportBtn) messageExportBtn.addEventListener('click', exportMessages);
-
-  const messageBulkReadBtn = document.getElementById('messageBulkReadBtn');
-  if (messageBulkReadBtn) {
-    messageBulkReadBtn.addEventListener('click', () => bulkSetMessageRead([...state.selection.messages], true));
-  }
-
-  const messageBulkUnreadBtn = document.getElementById('messageBulkUnreadBtn');
-  if (messageBulkUnreadBtn) {
-    messageBulkUnreadBtn.addEventListener('click', () => bulkSetMessageRead([...state.selection.messages], false));
-  }
-
-  const messageBulkDeleteBtn = document.getElementById('messageBulkDeleteBtn');
-  if (messageBulkDeleteBtn) messageBulkDeleteBtn.addEventListener('click', bulkDeleteMessages);
-
-  const messageBulkClearBtn = document.getElementById('messageBulkClearBtn');
-  if (messageBulkClearBtn) {
-    messageBulkClearBtn.addEventListener('click', () => clearSelection('messages'));
-  }
-
+  bindClick('messageExportBtn', exportMessages);
+  bindClick('messageBulkReadBtn', () => bulkSetMessageRead([...state.selection.messages], true));
+  bindClick('messageBulkUnreadBtn', () => bulkSetMessageRead([...state.selection.messages], false));
+  bindClick('messageBulkDeleteBtn', bulkDeleteMessages);
+  bindClick('messageBulkClearBtn', () => clearSelection('messages'));
   bindSelectAll('messages', renderMessages);
 
-  // --- Users toolbar ---
-  const userSearch = document.getElementById('userSearch');
-  if (userSearch) {
-    let t;
-    userSearch.addEventListener('input', () => {
-      clearTimeout(t);
-      t = setTimeout(() => {
-        state.filters.users.search = userSearch.value;
-        state.filters.users.page = 1;
-        renderUsers();
-      }, 200);
-    });
-  }
-
-  const userRoleFilter = document.getElementById('userRoleFilter');
-  if (userRoleFilter) {
-    userRoleFilter.addEventListener('change', () => {
-      state.filters.users.role = userRoleFilter.value;
-      state.filters.users.page = 1;
-      renderUsers();
-    });
-  }
-
-  const userExportBtn = document.getElementById('userExportBtn');
-  if (userExportBtn) userExportBtn.addEventListener('click', exportUsers);
-
-  const userBulkRoleBtn = document.getElementById('userBulkRoleBtn');
-  if (userBulkRoleBtn) {
-    userBulkRoleBtn.addEventListener('click', () => {
-      const select = document.getElementById('userBulkRoleSelect');
-      if (select) bulkChangeRole(select.value);
-    });
-  }
-
-  const userBulkDeleteBtn = document.getElementById('userBulkDeleteBtn');
-  if (userBulkDeleteBtn) userBulkDeleteBtn.addEventListener('click', bulkDeleteUsers);
-
-  const userBulkClearBtn = document.getElementById('userBulkClearBtn');
-  if (userBulkClearBtn) {
-    userBulkClearBtn.addEventListener('click', () => clearSelection('users'));
-  }
-
-  bindSelectAll('users', renderUsers);
-
   // --- Message modal ---
-  const closeMessageModalBtn = document.getElementById('closeMessageModalBtn');
-  if (closeMessageModalBtn) closeMessageModalBtn.addEventListener('click', closeMessageModal);
-
-  const closeMessageModalFooterBtn = document.getElementById('closeMessageModalFooterBtn');
-  if (closeMessageModalFooterBtn) closeMessageModalFooterBtn.addEventListener('click', closeMessageModal);
-
-  const replyMessageModalBtn = document.getElementById('replyMessageModalBtn');
-  if (replyMessageModalBtn) replyMessageModalBtn.addEventListener('click', replyToMessage);
-
-  const toggleReadModalBtn = document.getElementById('toggleReadModalBtn');
-  if (toggleReadModalBtn) {
-    toggleReadModalBtn.addEventListener('click', () => {
-      if (state.viewingMessageId) toggleMessageRead(state.viewingMessageId);
-    });
-  }
+  bindClick('closeMessageModalBtn', closeMessageModal);
+  bindClick('closeMessageModalFooterBtn', closeMessageModal);
+  bindClick('replyMessageModalBtn', replyToMessage);
+  bindClick('toggleReadModalBtn', () => {
+    if (state.viewingMessageId) toggleMessageRead(state.viewingMessageId);
+  });
 
   const messageModal = document.getElementById('messageModal');
   if (messageModal) {
@@ -1453,11 +1005,7 @@ function bindEvents() {
   }
 
   document.addEventListener('keydown', event => {
-    if (event.key === 'Escape') {
-      closeMessageModal();
-      const drawer = document.getElementById('mobileDrawer');
-      if (drawer) drawer.classList.remove('active');
-    }
+    if (event.key === 'Escape') closeMessageModal();
   });
 }
 
@@ -1465,59 +1013,26 @@ function bindEvents() {
 // INIT
 // ============================================================
 async function initAdmin() {
-  const guard = await requireAdmin();
+  let authenticated = false;
+  try {
+    authenticated = await window.api.getSession();
+  } catch (_) { /* dianggap belum login */ }
 
-  const loadingEl = document.getElementById('adminLoading');
-  const errorEl = document.getElementById('adminError');
-  const contentEl = document.getElementById('adminContent');
-
-  if (!guard.ok) {
-    if (loadingEl) loadingEl.style.display = 'none';
-    if (errorEl) {
-      errorEl.style.display = 'flex';
-      const icon = errorEl.querySelector('.admin-error-icon');
-      const msg = errorEl.querySelector('.admin-error-message');
-      const btn = errorEl.querySelector('#adminGoAuth');
-      if (icon) icon.className = 'fa-solid ' + (guard.reason === 'unconfigured' ? 'fa-gear' : 'fa-lock') + ' admin-error-icon';
-      if (msg) msg.textContent = guard.message;
-      if (btn) {
-        btn.onclick = () => {
-          if (guard.reason === 'unconfigured') {
-            window.location.href = 'index.html';
-          } else {
-            window.location.href = 'auth.html';
-          }
-        };
-      }
-    }
-    if (contentEl) contentEl.style.display = 'none';
+  // Belum login → langsung ke halaman login, tidak perlu layar "akses ditolak".
+  if (!authenticated) {
+    window.location.replace('auth.html');
     return;
   }
 
+  const loadingEl = document.getElementById('adminLoading');
+  const contentEl = document.getElementById('adminContent');
   if (loadingEl) loadingEl.style.display = 'none';
-  if (errorEl) errorEl.style.display = 'none';
   if (contentEl) contentEl.style.display = 'block';
-
-  // Tampilkan nama admin di header
-  const adminNameEl = document.getElementById('adminUserName');
-  if (adminNameEl && guard.profile) {
-    adminNameEl.textContent = guard.profile.name || guard.user.email;
-  }
 
   bindEvents();
   updateImageClearButton();
 
-  // Expose functions ke global scope (untuk onclick di HTML)
-  window.adminEditProject = editProject;
-  window.adminDeleteProject = deleteProject;
-  window.adminViewMessage = viewMessage;
-  window.adminToggleRead = toggleMessageRead;
-  window.adminDeleteMessage = deleteMessage;
-  window.adminChangeRole = changeRole;
-  window.adminDeleteUser = deleteUser;
-
-  // Load data awal
-  await Promise.all([loadProjects(), loadMessages(), loadUsers()]);
+  await Promise.all([loadProjects(), loadMessages()]);
   updateStats();
 }
 

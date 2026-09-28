@@ -5,7 +5,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin Dashboard — PaulFolio</title>
-  <meta name="description" content="Dashboard admin PaulFolio untuk mengelola proyek, pesan, dan user.">
+  <meta name="description" content="Dashboard admin PaulFolio untuk mengelola proyek dan pesan.">
+  <meta name="robots" content="noindex, nofollow">
   <meta name="author" content="Paulus Petrus P Sianipar">
 
   <!-- Google Fonts: Plus Jakarta Sans & Fira Code -->
@@ -51,7 +52,7 @@
       <div class="header-actions">
         <span class="admin-welcome-badge">
           <i class="fa-solid fa-shield-halved" style="color: var(--accent);"></i>
-          Admin: <strong id="adminUserName">Loading...</strong>
+          <strong>Admin</strong>
         </span>
         <button class="btn btn-outline btn-sm" id="adminLogoutBtn">
           <i class="fa-solid fa-right-from-bracket"></i> Logout
@@ -91,15 +92,6 @@
       <p>Memuat dashboard admin...</p>
     </div>
 
-    <!-- Error State -->
-    <div class="admin-error" id="adminError" style="display: none;">
-      <i class="fa-solid fa-lock admin-error-icon"></i>
-      <h3>Akses Ditolak</h3>
-      <p class="admin-error-message">Anda harus login sebagai admin.</p>
-      <button class="btn btn-primary" id="adminGoAuth">
-        <i class="fa-solid fa-right-to-bracket"></i> ke Halaman Login
-      </button>
-    </div>
 
     <!-- Admin Dashboard Content -->
     <div id="adminContent" style="display: none;">
@@ -109,7 +101,7 @@
         <div class="admin-dashboard-header">
           <div>
             <h1 class="admin-page-title">Admin <span class="gradient-text">Dashboard</span></h1>
-            <p class="admin-page-subtitle">Kelola proyek, pesan masuk, dan user terdaftar.</p>
+            <p class="admin-page-subtitle">Kelola proyek dan pesan masuk.</p>
           </div>
           <div class="admin-stats-row">
             <div class="admin-stat-card">
@@ -126,8 +118,8 @@
               <span class="admin-stat-label"><i class="fa-solid fa-envelope-open"></i> Belum Dibaca</span>
             </div>
             <div class="admin-stat-card">
-              <span class="admin-stat-number" id="statUsers">0</span>
-              <span class="admin-stat-label"><i class="fa-solid fa-users"></i> User</span>
+              <span class="admin-stat-number" id="statCategories">0</span>
+              <span class="admin-stat-label"><i class="fa-solid fa-tags"></i> Kategori</span>
             </div>
           </div>
         </div>
@@ -139,9 +131,6 @@
           </button>
           <button class="admin-tab" data-tab="messages">
             <i class="fa-solid fa-envelope-open"></i> Pesan Masuk
-          </button>
-          <button class="admin-tab" data-tab="users">
-            <i class="fa-solid fa-users"></i> Manajemen User
           </button>
         </div>
 
@@ -174,6 +163,16 @@
               </div>
               <div class="admin-form-grid">
                 <div class="form-group">
+                  <label for="projectChallenges">Tantangan Utama</label>
+                  <textarea id="projectChallenges" class="form-input form-textarea" rows="3" placeholder="Tantangan yang dihadapi (opsional)"></textarea>
+                </div>
+                <div class="form-group">
+                  <label for="projectSolutions">Solusi Diterapkan</label>
+                  <textarea id="projectSolutions" class="form-input form-textarea" rows="3" placeholder="Solusi yang diterapkan (opsional)"></textarea>
+                </div>
+              </div>
+              <div class="admin-form-grid">
+                <div class="form-group">
                   <label for="projectImage">Gambar Proyek</label>
                   <div class="admin-image-upload">
                     <div class="admin-image-preview" id="projectImagePreview">
@@ -182,9 +181,9 @@
                     <div class="admin-image-upload-controls">
                       <input type="file" id="projectImageFile" accept="image/png,image/jpeg,image/webp,image/gif,image/avif"
                         class="form-input" style="padding:8px;">
-                      <input type="url" id="projectImage" class="form-input" placeholder="...atau paste URL gambar">
+                      <input type="text" id="projectImage" class="form-input" placeholder="...atau paste URL / path gambar">
                       <div class="admin-image-upload-hint">
-                        Maks 5 MB. JPG, PNG, WEBP, GIF, atau AVIF. Upload akan menimpa URL di atas.
+                        Maks 5 MB. JPG, PNG, WEBP, GIF, atau AVIF. File disimpan di folder <code>uploads/</code>.
                       </div>
                       <button type="button" class="btn btn-outline btn-sm" id="projectImageClearBtn" style="display:none;">
                         <i class="fa-solid fa-trash"></i> Hapus Gambar
@@ -243,7 +242,7 @@
             <div class="admin-bulk-bar" id="projectBulkBar" style="display:none;">
               <span><strong id="projectSelectedCount">0</strong> proyek dipilih</span>
               <div class="admin-bulk-actions">
-                <button class="btn btn-outline btn-sm" id="projectBulkDeleteBtn">
+                <button class="btn btn-outline btn-sm btn-danger-outline" id="projectBulkDeleteBtn">
                   <i class="fa-solid fa-trash"></i> Hapus Terpilih
                 </button>
                 <button class="btn btn-outline btn-sm" id="projectBulkClearBtn">Batal</button>
@@ -251,7 +250,7 @@
             </div>
 
             <div class="admin-table-wrapper">
-              <table class="admin-table">
+              <table class="admin-table admin-table-responsive">
                 <thead>
                   <tr>
                     <th class="admin-col-check">
@@ -261,8 +260,8 @@
                     <th>Kategori</th>
                     <th>Deskripsi</th>
                     <th>Klien</th>
-                    <th>Periode</th>
-                    <th>Dibuat</th>
+                    <th class="admin-col-optional">Periode</th>
+                    <th class="admin-col-optional">Dibuat</th>
                     <th>Aksi</th>
                   </tr>
                 </thead>
@@ -312,7 +311,7 @@
                 <button class="btn btn-outline btn-sm" id="messageBulkUnreadBtn">
                   <i class="fa-solid fa-envelope"></i> Tandai Belum Dibaca
                 </button>
-                <button class="btn btn-outline btn-sm" id="messageBulkDeleteBtn" style="color:var(--accent); border-color:rgba(244,63,94,.4);">
+                <button class="btn btn-outline btn-sm btn-danger-outline" id="messageBulkDeleteBtn">
                   <i class="fa-solid fa-trash"></i> Hapus Terpilih
                 </button>
                 <button class="btn btn-outline btn-sm" id="messageBulkClearBtn">Batal</button>
@@ -320,7 +319,7 @@
             </div>
 
             <div class="admin-table-wrapper">
-              <table class="admin-table">
+              <table class="admin-table admin-table-responsive">
                 <thead>
                   <tr>
                     <th class="admin-col-check">
@@ -331,7 +330,7 @@
                     <th>Email</th>
                     <th>Subjek</th>
                     <th>Pesan</th>
-                    <th>Tanggal</th>
+                    <th class="admin-col-optional">Tanggal</th>
                     <th>Aksi</th>
                   </tr>
                 </thead>
@@ -348,73 +347,6 @@
           </div>
         </div>
 
-        <!-- ==================== TAB: USERS ==================== -->
-        <div class="admin-tab-content" id="tab-users">
-          <div class="glass-card admin-table-card" style="padding: 28px;">
-            <div class="admin-table-header">
-              <h3 class="admin-table-title"><i class="fa-solid fa-users" style="color: var(--emerald);"></i> User Terdaftar</h3>
-              <div class="admin-toolbar">
-                <div class="admin-search-wrap">
-                  <i class="fa-solid fa-magnifying-glass"></i>
-                  <input type="search" id="userSearch" class="admin-search-input" placeholder="Cari nama atau email...">
-                </div>
-                <select id="userRoleFilter" class="admin-filter-select">
-                  <option value="">Semua role</option>
-                  <option value="admin">admin</option>
-                  <option value="designer">designer</option>
-                  <option value="user">user</option>
-                </select>
-                <button class="btn btn-outline btn-sm" id="userExportBtn" title="Export CSV">
-                  <i class="fa-solid fa-file-csv"></i> CSV
-                </button>
-              </div>
-            </div>
-
-            <div class="admin-bulk-bar" id="userBulkBar" style="display:none;">
-              <span><strong id="userSelectedCount">0</strong> user dipilih</span>
-              <div class="admin-bulk-actions">
-                <select id="userBulkRoleSelect" class="admin-filter-select">
-                  <option value="">Ubah role menjadi...</option>
-                  <option value="admin">admin</option>
-                  <option value="designer">designer</option>
-                  <option value="user">user</option>
-                </select>
-                <button class="btn btn-outline btn-sm" id="userBulkRoleBtn">Terapkan</button>
-                <button class="btn btn-outline btn-sm" id="userBulkDeleteBtn"
-                  style="color:var(--accent); border-color:rgba(244,63,94,.4);">
-                  <i class="fa-solid fa-trash"></i> Hapus Terpilih
-                </button>
-                <button class="btn btn-outline btn-sm" id="userBulkClearBtn">Batal</button>
-              </div>
-            </div>
-
-            <div class="admin-table-wrapper">
-              <table class="admin-table">
-                <thead>
-                  <tr>
-                    <th class="admin-col-check">
-                      <input type="checkbox" id="userSelectAll" aria-label="Pilih semua user">
-                    </th>
-                    <th>Nama</th>
-                    <th>Email</th>
-                    <th>Role</th>
-                    <th>Terdaftar</th>
-                    <th>Ubah Role</th>
-                    <th>Aksi</th>
-                  </tr>
-                </thead>
-                <tbody id="usersTableBody">
-                  <tr>
-                    <td colspan="7" style="text-align:center; padding: 40px; color: var(--text-muted);">
-                      <i class="fa-solid fa-spinner fa-spin"></i> Memuat data...
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-            <div class="admin-pagination" id="userPagination"></div>
-          </div>
-        </div>
 
       </div>
     </div>
@@ -451,8 +383,7 @@
   </div>
 
   <!-- Admin JavaScript -->
-  <script type="module" src="supabase.js"></script>
-  <script type="module" src="auth.js"></script>
+  <script type="module" src="api-client.js"></script>
   <script type="module" src="admin.js"></script>
   <script type="module" src="script.js"></script>
 </body>
