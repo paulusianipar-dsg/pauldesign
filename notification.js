@@ -23,7 +23,7 @@ const NOTIF_CONFIG = {
   // Browser Push Notification
   browser: {
     enabled: true,
-    icon: './assets/images/favicon.png',
+    icon: './assets/images/favicon.jpg',
   }
 };
 // ============================================================

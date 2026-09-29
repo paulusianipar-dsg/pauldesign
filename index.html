@@ -145,57 +145,47 @@
           </div>
         </div>
 
-        <!-- Hero Exclusive Dummy UI Interactive Widget -->
+        <!-- Hero Visual (Creative Design, Multimedia Design & IT) -->
         <div class="hero-visual">
-          <div class="glass-card hero-ui-card">
-            <!-- Window Bar Header -->
-            <div class="code-editor-header">
-              <div class="code-dots">
-                <span class="dot dot-red"></span>
-                <span class="dot dot-yellow"></span>
-                <span class="dot dot-green"></span>
-              </div>
-              <div class="code-filename">
-                <i class="fa-brands fa-react" style="color: #61dafb;"></i> paul_portfolio_core.config.ts
-              </div>
-              <div style="font-size: 0.8rem; color: var(--text-dim);">
-                <i class="fa-solid fa-lock" style="color: var(--emerald);"></i> Production Ready
-              </div>
+          <figure class="hero-art-card" id="heroSlider">
+            <div class="hero-slides">
+              <img src="./assets/images/slides/slide1.jpg" width="1600" height="1600" class="hero-slide is-active"
+                alt="Karya Paulus Petrus P Sianipar - Slide 1" fetchpriority="high">
+              <img src="./assets/images/slides/slide2.jpg" width="1600" height="1600" class="hero-slide"
+                alt="Karya Paulus Petrus P Sianipar - Slide 2" loading="lazy">
+              <img src="./assets/images/slides/slide3.jpg" width="1600" height="1600" class="hero-slide"
+                alt="Karya Paulus Petrus P Sianipar - Slide 3" loading="lazy">
             </div>
 
-            <!-- Editor Body -->
-            <div class="code-body"><span class="code-keyword">import</span> { <span class="code-type">Engineer</span>,
-              <span class="code-type">SkillStack</span> } <span class="code-keyword">from</span> <span
-                class="code-string">'@paul/core'</span>;
+            <button class="hero-slide-btn hero-slide-prev" id="heroSlidePrev" type="button"
+              aria-label="Slide sebelumnya">
+              <i class="fa-solid fa-chevron-left"></i>
+            </button>
+            <button class="hero-slide-btn hero-slide-next" id="heroSlideNext" type="button"
+              aria-label="Slide berikutnya">
+              <i class="fa-solid fa-chevron-right"></i>
+            </button>
 
-              <span class="code-keyword">export const</span> <span class="code-function">PaulProfile</span>: <span
-                class="code-type">Engineer</span> = {
-              name: <span class="code-string">'Paulus Petrus P Sianipar'</span>,
-              role: <span class="code-string">'Creative Designer & IT Specialist'</span>,
-              experienceYears: <span class="code-number">5</span>,
-              stack: [<span class="code-string">'React'</span>, <span class="code-string">'Laravel'</span>, <span
-                class="code-string">'Illustrator'</span>, <span class="code-string">'TypeScript'</span>],
-              location: <span class="code-string">'Bekasi, Indonesia'</span>,
-              status: <span class="code-string">'Available for Hire 🚀'</span>
-              };
-            </div>
+            <div class="hero-slide-dots" id="heroSlideDots" role="tablist" aria-label="Pilih slide"></div>
 
-            <!-- System Metrics Live Indicators -->
-            <div class="hero-metrics">
-              <div class="metric-box">
-                <span class="metric-val" style="color: var(--emerald);">100/100</span>
-                <span class="metric-lbl"><i class="fa-solid fa-bolt"></i> Lighthouse Speed</span>
-              </div>
-              <div class="metric-box">
-                <span class="metric-val" style="color: var(--primary);">99.9%</span>
-                <span class="metric-lbl"><i class="fa-solid fa-server"></i> System Uptime</span>
-              </div>
-              <div class="metric-box">
-                <span class="metric-val" style="color: var(--secondary);">A+</span>
-                <span class="metric-lbl"><i class="fa-solid fa-shield-halved"></i> Security Grade</span>
-              </div>
-            </div>
-          </div>
+            <figcaption class="hero-art-overlay">
+              <a href="projects.html?id=cd000001-0000-4000-8000-000000000001" class="hero-art-tag">
+                <i class="fa-solid fa-palette"></i> Creative Design
+              </a>
+              <a href="projects.html?id=cd000002-0000-4000-8000-000000000002" class="hero-art-tag">
+                <i class="fa-solid fa-film"></i> Multimedia
+              </a>
+              <a href="projects.html?id=cd000003-0000-4000-8000-000000000003" class="hero-art-tag">
+                <i class="fa-solid fa-headset"></i> IT Consultant
+              </a>
+              <a href="projects.html?id=cd000004-0000-4000-8000-000000000004" class="hero-art-tag">
+                <i class="fa-solid fa-code"></i> Web Development
+              </a>
+              <a href="projects.html?id=cd000005-0000-4000-8000-000000000005" class="hero-art-tag">
+                <i class="fa-solid fa-video"></i> CCTV Specialist
+              </a>
+            </figcaption>
+          </figure>
         </div>
       </div>
     </section>

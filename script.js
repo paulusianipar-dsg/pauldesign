@@ -10,10 +10,10 @@ function initApp() {
   // ==========================================
   const typewriterElement = document.getElementById('typewriter');
   const roles = [
-    "Creative Designer",
-    "IT Specialist",
-    "Web Developer",
-    "Multimedia Designer",
+    "Creative Design",
+    "Multimedia",
+    "IT Consultant",
+    "Web Development",
     "CCTV Specialist"
   ];
   let roleIndex = 0;
@@ -287,6 +287,12 @@ function initApp() {
       .then(projects => {
         renderProjectFilters(projects);
         renderProjects(projects);
+
+        // Deep-link: projects.html?id=<projectId> langsung membuka detail proyek
+        const deepLinkId = new URLSearchParams(window.location.search).get('id');
+        if (deepLinkId && projectsById[deepLinkId]) {
+          openProjectModal(deepLinkId);
+        }
       })
       .catch(err => {
         console.warn('[Projects] Gagal memuat proyek:', err);
@@ -411,7 +417,7 @@ function initApp() {
         try {
           new Notification('✅ PaulFolio — Notifikasi Aktif', {
             body: 'Notifikasi berfungsi dengan baik!',
-            icon: './assets/images/favicon.png',
+            icon: './assets/images/favicon.jpg',
             tag: 'paulfolio-test',
           });
           showToast('🔔 Notifikasi tes berhasil dikirim!');
@@ -436,7 +442,7 @@ function initApp() {
           // Tampilkan notifikasi test
           new Notification('✅ PaulFolio — Notifikasi Aktif', {
             body: 'Anda akan menerima pemberitahuan saat ada pesan masuk.',
-            icon: './assets/images/favicon.png',
+            icon: './assets/images/favicon.jpg',
             tag: 'paulfolio-activation',
           });
           updateBellState();
@@ -509,6 +515,70 @@ function initApp() {
     backToTopBtn.addEventListener('click', () => {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     });
+  }
+
+  // ==========================================
+  // 9. HERO SLIDESHOW (CREATIVE / MULTIMEDIA DESIGN)
+  // ==========================================
+  const heroSlider = document.getElementById('heroSlider');
+  const heroSlides = heroSlider ? [...heroSlider.querySelectorAll('.hero-slide')] : [];
+  const heroDotsWrap = document.getElementById('heroSlideDots');
+  const heroPrevBtn = document.getElementById('heroSlidePrev');
+  const heroNextBtn = document.getElementById('heroSlideNext');
+  const SLIDE_INTERVAL = 5000;
+  let heroSlideIndex = 0;
+  let heroTimer = null;
+
+  if (heroSlider && heroSlides.length > 1) {
+    const heroDots = heroSlides.map((_, i) => {
+      const dot = document.createElement('button');
+      dot.type = 'button';
+      dot.className = 'hero-slide-dot' + (i === 0 ? ' active' : '');
+      dot.setAttribute('role', 'tab');
+      dot.setAttribute('aria-label', 'Slide ' + (i + 1));
+      dot.addEventListener('click', () => {
+        showSlide(i);
+        restartSlideTimer();
+      });
+      heroDotsWrap.appendChild(dot);
+      return dot;
+    });
+
+    function showSlide(nextIndex) {
+      heroSlideIndex = (nextIndex + heroSlides.length) % heroSlides.length;
+      heroSlides.forEach((slide, i) => slide.classList.toggle('is-active', i === heroSlideIndex));
+      heroDots.forEach((dot, i) => dot.classList.toggle('active', i === heroSlideIndex));
+    }
+
+    function startSlideTimer() {
+      heroTimer = setInterval(() => showSlide(heroSlideIndex + 1), SLIDE_INTERVAL);
+    }
+
+    function stopSlideTimer() {
+      if (heroTimer) clearInterval(heroTimer);
+      heroTimer = null;
+    }
+
+    function restartSlideTimer() {
+      stopSlideTimer();
+      startSlideTimer();
+    }
+
+    if (heroPrevBtn) heroPrevBtn.addEventListener('click', () => { showSlide(heroSlideIndex - 1); restartSlideTimer(); });
+    if (heroNextBtn) heroNextBtn.addEventListener('click', () => { showSlide(heroSlideIndex + 1); restartSlideTimer(); });
+
+    heroSlider.addEventListener('mouseenter', stopSlideTimer);
+    heroSlider.addEventListener('mouseleave', startSlideTimer);
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        stopSlideTimer();
+      } else {
+        startSlideTimer();
+      }
+    });
+
+    startSlideTimer();
   }
 
 } catch (err) {

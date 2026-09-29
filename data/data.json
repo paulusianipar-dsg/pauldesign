@@ -1,122 +1,98 @@
 {
   "admin": {
     "passwordHash": "scrypt$16384$8$1$t5FQ9ht6OXOH35i4xQJXMg==$ia1Ac/eqJ+L7jRjXrLll1Cnc9DIaEyOrvTMhSHVdVvOn4O4MIFJrgK1jR6wN6grzu3k/SGpUcUWPMEj5cEXMsA==",
-    "sessionSecret": null
+    "sessionSecret": "4844b22435dc9971fe583524e1182f1509344cb40041e2e06b5637d39f596a4c"
   },
   "projects": [
     {
-      "id": "37ba2885-cd38-4c8d-85f6-f1523042e031",
-      "title": "SaaS Analytics & Cloud Dashboard",
-      "category": "Web Application",
-      "description": "Platform analytics SaaS tingkat tinggi yang mampu mengolah jutaan baris data setiap detik. Dilengkapi dengan visualisasi grafik interaktif, statistik pendapatan real-time, ekspor laporan otomatis, serta otentikasi peran pengguna ganda.",
-      "challenges": "Mengoptimalkan performa rendering chart dan kueri database besar tanpa menghambat antarmuka pengguna.",
-      "solutions": "Menggunakan WebSockets untuk data streaming, Redis untuk caching data, dan arsitektur komponen React yang modular.",
-      "image": "./assets/images/project1.png",
+      "id": "cd000001-0000-4000-8000-000000000001",
+      "title": "Creative Design",
+      "category": "Creative Design",
+      "description": "Desain identitas visual, branding, dan materi promosi yang konsisten untuk membangun citra merek yang kuat dan mudah diingat.",
+      "challenges": "Menjaga konsistensi visual lintas kanal media cetak dan digital dengan satu design system yang fleksibel.",
+      "solutions": "Menyusun design system terpusat di Figma, membuat master artwork yang bisa diturunkan ke berbagai ukuran, serta menyertakan guideline untuk tim produksi.",
+      "image": "./assets/images/slides/slide1.jpg",
       "tech_stack": [
-        "Laravel 10",
-        "React.js",
-        "Tailwind CSS",
-        "Chart.js",
-        "Redis",
+        "Adobe Illustrator",
+        "Adobe Photoshop",
+        "Adobe InDesign",
+        "Canva"
+      ],
+      "client": "PaulFolio Studio",
+      "period": "Berkelanjutan",
+      "created_at": "2026-01-05T00:00:00.000Z"
+    },
+    {
+      "id": "cd000002-0000-4000-8000-000000000002",
+      "title": "Multimedia",
+      "category": "Multimedia",
+      "description": "Produksi konten multimedia interaktif: video promosi, motion graphic, animasi 3D, serta konten sosial media yang relevan untuk berbagai platform.",
+      "challenges": "Menghasilkan konten berkualitas broadcast dengan deadline ketat tanpa mengorbankan detail visual dan kualitas audio.",
+      "solutions": "Pipeline produksi terstruktur mulai dari storyboard, motion graphics ber图层, color grading, hingga optimasi kompresi per platform.",
+      "image": "./assets/images/slides/slide2.jpg",
+      "tech_stack": [
+        "Adobe Premiere Pro",
+        "Adobe After Effects",
+        "DaVinci Resolve",
+        "Blender"
+      ],
+      "client": "PaulFolio Studio",
+      "period": "Berkelanjutan",
+      "created_at": "2026-01-04T00:00:00.000Z"
+    },
+    {
+      "id": "cd000003-0000-4000-8000-000000000003",
+      "title": "IT Consultant",
+      "category": "IT Consultant",
+      "description": "Konsultasi teknologi menyeluruh mulai dari audit infrastruktur, perancangan arsitektur, hingga migrasi aplikasi legacy ke stack modern.",
+      "challenges": "Memetakan sistem lama yang terdokumentasi minim tanpa mengganggu operasional bisnis yang sedang berjalan.",
+      "solutions": "Audit bertahap ber-dokumentasi, diagram arsitektur target, serta roadmap migrasi bertahap dengan fallback yang aman.",
+      "image": "./assets/images/slides/slide3.jpg",
+      "tech_stack": [
+        "IT Infrastructure Audit",
+        "Cloud Architecture",
+        "Docker",
+        "Linux"
+      ],
+      "client": "PaulFolio Studio",
+      "period": "Berkelanjutan",
+      "created_at": "2026-01-03T00:00:00.000Z"
+    },
+    {
+      "id": "cd000004-0000-4000-8000-000000000004",
+      "title": "Web Development",
+      "category": "Web Development",
+      "description": "Pengembangan website dan aplikasi web responsif yang cepat, aman, serta SEO-friendly, dari landing page hingga dashboard dinamis dengan CMS.",
+      "challenges": "Menjaga performa halaman pada koneksi lambat sekaligus memenuhi standar keamanan dan aksesibilitas.",
+      "solutions": "Frontend berbasis component modern, optimasi aset dan lazy loading, plus CI/CD untuk deploy otomatis ke server.",
+      "image": "./assets/images/image1.png",
+      "tech_stack": [
+        "JavaScript",
+        "PHP",
+        "Laravel",
         "MySQL"
       ],
-      "client": "CloudPulse Enterprise",
-      "period": "3 Bulan (2025)",
-      "created_at": "2025-12-31T00:00:00.000Z"
+      "client": "PaulFolio Studio",
+      "period": "Berkelanjutan",
+      "created_at": "2026-01-02T00:00:00.000Z"
     },
     {
-      "id": "4522f751-9d58-4a96-a535-6537bb8c3a99",
-      "title": "CryptoPay FinTech Companion App",
-      "category": "Mobile App",
-      "description": "Aplikasi dompet digital serbaguna untuk bertransaksi dan memantau portofolio aset kripto secara cepat dan aman. Memiliki fitur keamanan biometrik (FaceID/Fingerprint), notifikasi perubahan harga, dan swap token instan.",
-      "challenges": "Menjamin keamanan transaksi Web3 dan sinkronisasi real-time harga aset dari berbagai pertukaran crypto.",
-      "solutions": "Implementasi protokol enkripsi bertingkat tinggi dan API WebSocket berkecepatan tinggi.",
-      "image": "./assets/images/project2.png",
+      "id": "cd000005-0000-4000-8000-000000000005",
+      "title": "CCTV Specialist",
+      "category": "CCTV Specialist",
+      "description": "Instalasi dan konfigurasi sistem CCTV untuk keamanan rumah, ruko, maupun kantor, termasuk perekaman jarak jauh dan akses tampilan real-time.",
+      "challenges": "Menjangkauan area yang luas dengan cakupan kamera optimal sekaligus melindungi rekaman dari akses tidak sah.",
+      "solutions": "Perhitungan sudut dan jangkauan kamera, penempatan NVR dengan penyimpanan cadangan, serta akses viewing terenkripsi.",
+      "image": "./assets/images/image2.png",
       "tech_stack": [
-        "React Native",
-        "TypeScript",
-        "Node.js",
-        "Web3.js",
-        "Firebase",
-        "Redux Toolkit"
+        "IP Camera",
+        "NVR Setup",
+        "CCTV Remote Viewing",
+        "Network Cabling"
       ],
-      "client": "CryptoPay Global",
-      "period": "4 Bulan (2025)",
-      "created_at": "2025-12-30T00:00:00.000Z"
-    },
-    {
-      "id": "7a8de534-5338-4c98-8749-34c70938d860",
-      "title": "Luxe Commerce Luxury Storefront",
-      "category": "UI/UX Design",
-      "description": "Desain sistem antarmuka antarmuka eksklusif untuk toko ritel mewah. Mengusung konsep visual dark glassmorphism modern dengan micro-animations yang mulus untuk meningkatkan angka konversi belanja.",
-      "challenges": "Menciptakan kesan mewah yang eksklusif tanpa mengorbankan kecepatan navigasi dan kemudahan akses di layar seluler.",
-      "solutions": "Merancang Design System Figma yang komprehensif lengkap dengan aturan tipografi, komponen reusable, dan skenario pengujian pengguna.",
-      "image": "./assets/images/project3.png",
-      "tech_stack": [
-        "Figma",
-        "UI/UX Research",
-        "Interactive Prototype",
-        "Design System"
-      ],
-      "client": "Luxe Group Indonesia",
-      "period": "2 Bulan (2024)",
-      "created_at": "2025-12-29T00:00:00.000Z"
-    },
-    {
-      "id": "1cc8aeda-bb74-4b6b-a985-b581b781c9b7",
-      "title": "AI Content Generator Suite",
-      "category": "Web Application",
-      "description": "Platform pembuatan konten otomatis yang memanfaatkan model bahasa LLM OpenAI. Pengguna dapat menghasilkan artikel blog, postingan sosial media, dan desain gambar dalam hitungan detik.",
-      "challenges": "Menangani batas kecepatan API (rate-limiting) dan pemrosesan latar belakang untuk generasi konten panjang.",
-      "solutions": "Sistem antrean tugas (Queue system) berbasis BullMQ dan pemicu respons berbasis Server-Sent Events (SSE).",
-      "image": "./assets/images/project1.png",
-      "tech_stack": [
-        "Next.js 14",
-        "OpenAI API",
-        "PostgreSQL",
-        "Prisma ORM",
-        "Tailwind CSS"
-      ],
-      "client": "MediaCraft AI",
-      "period": "2.5 Bulan (2025)",
-      "created_at": "2025-12-28T00:00:00.000Z"
-    },
-    {
-      "id": "30dddd2f-d721-4cbd-b30d-2b72d436c77e",
-      "title": "HealthPulse Smart Fitness Tracker",
-      "category": "Mobile App",
-      "description": "Aplikasi seluler yang terintegrasi dengan perangkat jam tangan pintar untuk memantau detak jantung, pola tidur, jumlah langkah harian, serta analisis kalori yang terbakar.",
-      "challenges": "Konektivitas Bluetooth Low Energy (BLE) yang stabil di berbagai perangkat Android dan iOS.",
-      "solutions": "Penggunaan pustaka BLE kustom dengan mekanisme auto-reconnect cerdas.",
-      "image": "./assets/images/project2.png",
-      "tech_stack": [
-        "Flutter",
-        "Dart",
-        "Firebase Firestore",
-        "Bluetooth LE API"
-      ],
-      "client": "HealthPulse Tech",
-      "period": "3 Bulan (2024)",
-      "created_at": "2025-12-27T00:00:00.000Z"
-    },
-    {
-      "id": "a3879e62-3778-4ae7-9823-91c9a768a050",
-      "title": "Quantum Server & Hosting Console",
-      "category": "Web Application",
-      "description": "Konsol manajemen server cloud terpusat yang memudahkan pengembang menyebarkan (deploy) kontainer Docker, mengelola sertifikat SSL, dan mengawasi kesehatan infrastruktur.",
-      "challenges": "Eksekusi perintah terminal jarak jauh secara aman dan pemantauan beban server.",
-      "solutions": "Koneksi SSH terenkripsi dan agen pemantauan berbasis Golang yang ringan.",
-      "image": "./assets/images/project3.png",
-      "tech_stack": [
-        "Vue.js 3",
-        "Golang",
-        "Docker API",
-        "Tailwind CSS",
-        "Linux CLI"
-      ],
-      "client": "Quantum Networks",
-      "period": "5 Bulan (2024)",
-      "created_at": "2025-12-26T00:00:00.000Z"
+      "client": "PaulFolio Studio",
+      "period": "Berkelanjutan",
+      "created_at": "2026-01-01T00:00:00.000Z"
     }
   ],
   "messages": []
