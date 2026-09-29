@@ -413,7 +413,7 @@ function initApp() {
         try {
           new Notification('✅ PaulFolio — Notifikasi Aktif', {
             body: 'Notifikasi berfungsi dengan baik!',
-            icon: './assets/images/favicon.jpg',
+            icon: './assets/images/favicon-192.png',
             tag: 'paulfolio-test',
           });
           showToast('🔔 Notifikasi tes berhasil dikirim!');
@@ -438,7 +438,7 @@ function initApp() {
           // Tampilkan notifikasi test
           new Notification('✅ PaulFolio — Notifikasi Aktif', {
             body: 'Anda akan menerima pemberitahuan saat ada pesan masuk.',
-            icon: './assets/images/favicon.jpg',
+            icon: './assets/images/favicon-192.png',
             tag: 'paulfolio-activation',
           });
           updateBellState();
