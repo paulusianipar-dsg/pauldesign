@@ -1,6 +1,10 @@
 /**
  * PaulFolio — Main JavaScript Logic & Dynamic Interactions
  */
+import projects from './data/projects.json';
+
+// Nomor WhatsApp Paulus (format internasional tanpa "+" atau spasi).
+const WHATSAPP_NUMBER = '6285162744708';
 
 function initApp() {
   try {
@@ -282,26 +286,18 @@ function initApp() {
     projectModal.classList.add('active');
   }
 
-  if (projectsGrid && window.api) {
-    window.api.getProjects()
-      .then(projects => {
-        renderProjectFilters(projects);
-        renderProjects(projects);
+  if (projectsGrid) {
+    const projectList = [...projects].sort((a, b) =>
+      String(b.created_at).localeCompare(String(a.created_at))
+    );
+    renderProjectFilters(projectList);
+    renderProjects(projectList);
 
-        // Deep-link: projects.html?id=<projectId> langsung membuka detail proyek
-        const deepLinkId = new URLSearchParams(window.location.search).get('id');
-        if (deepLinkId && projectsById[deepLinkId]) {
-          openProjectModal(deepLinkId);
-        }
-      })
-      .catch(err => {
-        console.warn('[Projects] Gagal memuat proyek:', err);
-        projectsGrid.innerHTML = `
-          <div class="projects-empty">
-            <i class="fa-solid fa-triangle-exclamation"></i>
-            <p>Gagal memuat proyek. Coba muat ulang halaman.</p>
-          </div>`;
-      });
+    // Deep-link: projects.html?id=<projectId> langsung membuka detail proyek
+    const deepLinkId = new URLSearchParams(window.location.search).get('id');
+    if (deepLinkId && projectsById[deepLinkId]) {
+      openProjectModal(deepLinkId);
+    }
   }
 
   const closeProjectModal = () => projectModal && projectModal.classList.remove('active');
@@ -456,39 +452,40 @@ function initApp() {
     });
   }
 
-  window.handleFormSubmit = async function(event) {
+  // Situs ini sepenuhnya statis (tanpa server), jadi form tidak dikirim ke
+  // backend. Isi form diteruskan ke WhatsApp Paulus lewat wa.me.
+  window.handleFormSubmit = function(event) {
     event.preventDefault();
     const form = document.getElementById('contactForm');
-    const submitBtn = document.getElementById('submitBtn');
-    if (!form || !submitBtn) return;
+    if (!form) return;
 
     const value = id => (document.getElementById(id) || {}).value || '';
-    const formData = {
-      name: value('name').trim(),
-      email: value('email').trim(),
-      subject: value('subject').trim(),
-      message: value('message').trim(),
-    };
+    const name = value('name').trim();
+    const email = value('email').trim();
+    const subject = value('subject').trim();
+    const message = value('message').trim();
 
-    const originalText = submitBtn.innerHTML;
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Mengirim Pesan...`;
-
-    try {
-      await window.api.sendMessage(formData);
-      form.reset();
-      showToast(`🎉 Terima kasih ${formData.name}, pesan berhasil dikirim! Paul akan membalas segera.`);
-
-      // Kirim notifikasi browser + WhatsApp
-      if (typeof window.sendContactNotifications === 'function') {
-        window.sendContactNotifications(formData);
-      }
-    } catch (e) {
-      showToast(`⚠️ ${e.message || 'Pesan gagal dikirim. Silakan coba lagi.'}`);
-    } finally {
-      submitBtn.disabled = false;
-      submitBtn.innerHTML = originalText;
+    if (!name || !email || !message) {
+      showToast('⚠️ Nama, email, dan pesan wajib diisi.');
+      return;
     }
+
+    const text = [
+      `*${subject || 'Pesan dari situs'}*`,
+      '',
+      `Nama: ${name}`,
+      `Email: ${email}`,
+      '',
+      message,
+    ].join('\n');
+
+    window.open(
+      `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(text)}`,
+      '_blank',
+      'noopener'
+    );
+    form.reset();
+    showToast(`🎉 Terima kasih ${name}, lanjutkan kirim pesan di WhatsApp.`);
   };
 
   function showToast(message) {

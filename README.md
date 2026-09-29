@@ -1,51 +1,65 @@
 # PaulFolio
 
-Website portfolio + dashboard admin. Semua data disimpan **lokal di folder project**,
-tanpa database atau backend eksternal.
+Website portfolio **sepenuhnya statis**. Tidak ada backend, tidak ada database,
+tidak ada fungsi serverless — hasil `npm run build` bisa di-host di mana saja
+(Vercel, Netlify, GitHub Pages, Nginx, atau hosting shared hosting).
 
 ## Struktur data
 
-| Lokasi            | Isi                                                        |
-| ----------------- | ---------------------------------------------------------- |
-| `data/data.json`  | Proyek, pesan kontak, dan hash password admin              |
-| `uploads/`        | Gambar proyek yang di-upload dari dashboard admin          |
-| `server/`         | API lokal kecil (Node.js bawaan, tanpa dependency)         |
+| Lokasi               | Isi                                                             |
+| -------------------- | --------------------------------------------------------------- |
+| `data/projects.json` | Daftar proyek yang dirender di halaman beranda & projects        |
 
-`data/data.json` tidak pernah disajikan ke browser (request ke file itu selalu 404).
+Tidak ada file lain yang perlu dikelola. Gambar proyek memakai aset statis di
+`assets/`, dan form kontak meneruskan pesan ke WhatsApp Paulus.
 
 ## Menjalankan
 
 ```bash
 npm install
-npm run dev          # development: http://localhost:5173
+npm run dev            # development: http://localhost:5173
+npm run build          # hasil build di dist/
+npm run preview        # cek hasil build secara lokal
 ```
 
-Produksi (butuh Node.js di server, karena admin menulis ke `data.json` dan `uploads/`):
+Folder `dist/` adalah output final. Untuk hosting, cukup unggah isinya — atau
+hubungkan repo ke Vercel dengan preset **Vite** (framework preset sudah
+mengenali build + static output).
 
-```bash
-npm run build
-npm start            # http://localhost:3000  (ubah dengan PORT=xxxx npm start)
+## Menambah / mengubah proyek
+
+Edit `data/projects.json` lalu commit & deploy. Vite meng-inline file ini ke
+bundle, jadi tidak ada request jaringan tambahan saat halaman dimuat.
+
+Struktur satu proyek:
+
+```json
+{
+  "id": "cd000001-0000-4000-8000-000000000001",
+  "title": "Creative Design",
+  "category": "Creative Design",
+  "description": "Ringkasan singkat untuk kartu proyek.",
+  "challenges": "Tantangan utama proyek.",
+  "solutions": "Solusi yang diterapkan.",
+  "image": "./assets/images/slides/slide1.jpg",
+  "tech_stack": ["Adobe Illustrator", "Canva"],
+  "client": "PaulFolio Studio",
+  "period": "Berkelanjutan",
+  "created_at": "2026-01-05T00:00:00.000Z"
+}
 ```
 
-> Hosting statis/serverless (misalnya Vercel, Netlify, GitHub Pages) **tidak bisa**
-> menyimpan perubahan dari dashboard admin, karena filesystem-nya read-only / tidak persisten.
-> Gunakan VPS atau hosting yang bisa menjalankan `npm start`.
+Halaman beranda dan `projects.html` menampilkan proyek **terbaru lebih dulu**,
+diurutkan berdasarkan `created_at` (format ISO 8601). `id` dipakai untuk
+deep-link: `projects.html?id=<id>` langsung membuka detail proyek tersebut.
 
-## Admin
+## Form kontak
 
-- Login: `/auth.html` — hanya password.
-- Password default: `gmi2026` (disimpan sebagai hash **scrypt** + salt di `data/data.json`).
-- Ganti password:
+Tidak ada server yang menerima pesan, jadi form di `contact.html` tidak mengirim
+ke backend. Isi form dirangkai menjadi pesan teks lalu membuka
+`https://wa.me/<nomor>?text=...` di tab baru. Nomor WhatsApp ada di
+`script.js` (`WHATSAPP_NUMBER`) dan di tautan CTA pada `contact.html`.
 
-  ```bash
-  npm run set-password -- passwordBaru
-  ```
-
-  Semua sesi admin yang sedang aktif otomatis logout.
-
-Sesi admin memakai cookie `HttpOnly` + `SameSite=Strict` yang ditandatangani HMAC
-(berlaku 12 jam). Login dibatasi 5 percobaan gagal per 15 menit per IP.
-
-## Backup
-
-Cukup salin folder `data/` dan `uploads/`.
+Kalau nanti butuh pengumpulan pesan yang tersimpan di server, itu harus
+dibuatkan ulang sebagai layanan terpisah (Vercel Functions + database
+terkelola) — bukan dengan menulis file lokal.

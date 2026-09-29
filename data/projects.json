@@ -1,0 +1,92 @@
+[
+  {
+    "id": "cd000001-0000-4000-8000-000000000001",
+    "title": "Creative Design",
+    "category": "Creative Design",
+    "description": "Desain identitas visual, branding, dan materi promosi yang konsisten untuk membangun citra merek yang kuat dan mudah diingat.",
+    "challenges": "Menjaga konsistensi visual lintas kanal media cetak dan digital dengan satu design system yang fleksibel.",
+    "solutions": "Menyusun design system terpusat di Figma, membuat master artwork yang bisa diturunkan ke berbagai ukuran, serta menyertakan guideline untuk tim produksi.",
+    "image": "./assets/images/slides/slide1.jpg",
+    "tech_stack": [
+      "Adobe Illustrator",
+      "Adobe Photoshop",
+      "Adobe InDesign",
+      "Canva"
+    ],
+    "client": "PaulFolio Studio",
+    "period": "Berkelanjutan",
+    "created_at": "2026-01-05T00:00:00.000Z"
+  },
+  {
+    "id": "cd000002-0000-4000-8000-000000000002",
+    "title": "Multimedia",
+    "category": "Multimedia",
+    "description": "Produksi konten multimedia interaktif: video promosi, motion graphic, animasi 3D, serta konten sosial media yang relevan untuk berbagai platform.",
+    "challenges": "Menghasilkan konten berkualitas broadcast dengan deadline ketat tanpa mengorbankan detail visual dan kualitas audio.",
+    "solutions": "Pipeline produksi terstruktur mulai dari storyboard, motion graphics ber图层, color grading, hingga optimasi kompresi per platform.",
+    "image": "./assets/images/slides/slide2.jpg",
+    "tech_stack": [
+      "Adobe Premiere Pro",
+      "Adobe After Effects",
+      "DaVinci Resolve",
+      "Blender"
+    ],
+    "client": "PaulFolio Studio",
+    "period": "Berkelanjutan",
+    "created_at": "2026-01-04T00:00:00.000Z"
+  },
+  {
+    "id": "cd000003-0000-4000-8000-000000000003",
+    "title": "IT Consultant",
+    "category": "IT Consultant",
+    "description": "Konsultasi teknologi menyeluruh mulai dari audit infrastruktur, perancangan arsitektur, hingga migrasi aplikasi legacy ke stack modern.",
+    "challenges": "Memetakan sistem lama yang terdokumentasi minim tanpa mengganggu operasional bisnis yang sedang berjalan.",
+    "solutions": "Audit bertahap ber-dokumentasi, diagram arsitektur target, serta roadmap migrasi bertahap dengan fallback yang aman.",
+    "image": "./assets/images/slides/slide3.jpg",
+    "tech_stack": [
+      "IT Infrastructure Audit",
+      "Cloud Architecture",
+      "Docker",
+      "Linux"
+    ],
+    "client": "PaulFolio Studio",
+    "period": "Berkelanjutan",
+    "created_at": "2026-01-03T00:00:00.000Z"
+  },
+  {
+    "id": "cd000004-0000-4000-8000-000000000004",
+    "title": "Web Development",
+    "category": "Web Development",
+    "description": "Pengembangan website dan aplikasi web responsif yang cepat, aman, serta SEO-friendly, dari landing page hingga dashboard dinamis dengan CMS.",
+    "challenges": "Menjaga performa halaman pada koneksi lambat sekaligus memenuhi standar keamanan dan aksesibilitas.",
+    "solutions": "Frontend berbasis component modern, optimasi aset dan lazy loading, plus CI/CD untuk deploy otomatis ke server.",
+    "image": "./assets/images/image1.png",
+    "tech_stack": [
+      "JavaScript",
+      "PHP",
+      "Laravel",
+      "MySQL"
+    ],
+    "client": "PaulFolio Studio",
+    "period": "Berkelanjutan",
+    "created_at": "2026-01-02T00:00:00.000Z"
+  },
+  {
+    "id": "cd000005-0000-4000-8000-000000000005",
+    "title": "CCTV Specialist",
+    "category": "CCTV Specialist",
+    "description": "Instalasi dan konfigurasi sistem CCTV untuk keamanan rumah, ruko, maupun kantor, termasuk perekaman jarak jauh dan akses tampilan real-time.",
+    "challenges": "Mencangkau area luas dengan cakupan kamera optimal sekaligus melindungi rekaman dari akses tidak sah.",
+    "solutions": "Perhitungan sudut dan jangkauan kamera, penempatan NVR dengan penyimpanan cadangan, serta akses viewing terenkripsi.",
+    "image": "./assets/images/image2.png",
+    "tech_stack": [
+      "IP Camera",
+      "NVR Setup",
+      "CCTV Remote Viewing",
+      "Network Cabling"
+    ],
+    "client": "PaulFolio Studio",
+    "period": "Berkelanjutan",
+    "created_at": "2026-01-01T00:00:00.000Z"
+  }
+]
